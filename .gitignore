@@ -1,0 +1,29 @@
+# === General ===
+.DS_Store
+.env
+
+# === Node modules ===
+backend/node_modules/
+frontend/node_modules/
+
+# === Environment files ===
+backend/.env
+
+# === Build output ===
+frontend/build/
+
+# === Lock files (optional, depending on team preference) ===
+backend/package-lock.json
+frontend/package-lock.json
+
+# === Logs ===
+*.log
+npm-debug.log*
+
+# === Coverage / Testing ===
+coverage/
+frontend/coverage/
+backend/coverage/
+
+# === VS Code settings (optional, if you're using VS Code) ===
+.vscode/
