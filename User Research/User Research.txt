@@ -1,0 +1,45 @@
+# Core assignment: User research, Part I [+7.5]
+
+Phase: User research
+Due date: Friday, April 18 at 11:59pm PT
+The goal of this stage of the project is to learn as much as you can about your potential users and interaction settings. Note: It is very common (and even expected) that you will doubt your initial project goals. When you feel that, take a moment to pause and ask why.
+Course learning objectives this assignment facilitates: (1) Use and explain methods for user research; (2) Explore and express complex problems / practice communicating user research; (3) Reflect on what you know, don’t know, and  how to learn what you don’t know
+Grading: This is a group assignment. All members of the group are expected to participate fully. Each group will receive one grade. / Every member will receive the same number of points.
+What to submit: In your project’s Github repo, create a folder for User Research (i.e., “user-research”) that includes all written/drawn responses to the below questions + notes for user research (as specified below). You can reuse this same repo for both parts of user research. Submit the github repo link to BruinLearn. Only one person needs to submit for the group.
+# Before you get started with users [+3]
+1. [+1] As a group, discuss any assumptions you have about your users or usage contexts.
+Consider aspects such as language, age, dis/ability, indoors/outdoors, alone vs. small group vs. family vs. large social gathering, etc. Write a summary of your discussion and a clear statement of your assumptions going into user research.
+Assumptions: 
+College students that want to plan their outfits
+If they care about what they are wearing, they are more inclined to use the app
+Plan outfits for certain special events vs users who would use it everyday
+Use it for themself in the morning? Or the night before? 
+Patience to import their closet (may not use the app if this takes too long)
+Takes a while to take pics and upload
+Alternative is to have a catalogue of similar clothes that users can save
+Item search function, web scrape Pinterest
+
+2. [+1] As a group, share any hunches you want to test or unknown/open-ended questions you want to answer through user research. Summarize your discussion, listing out 2-3 things you want to learn through user research.
+How will we display the clothes? Upload pictures, have default options to change colors + maybe add description, draw, AI generation?
+AI vs. image upload vs. drawing
+How do you sort clothes?
+What kind of users would use this? In what kind of situations?
+Would users be more inclined to use the app if it had a social feature?
+Sharing clothes
+Posting outfits for ideas, rating, commenting 
+
+3. [+1] Write your user research protocol. Include the following: 
+Recruitment strategy (e.g., whom to contact, how to contact, how many); any contingency plans in case you cannot reach 10-15 potential users
+Time and place for each user research session (e.g., “in the afternoons, in person, in a meeting room”)
+Each member’s role and responsibilities (e.g., For interviews: interviewer, note-taker, discussant, etc.)
+Use interviews + survey
+Mostly our friends, maybe reach out to UCLA FAST; 3-4 interviews each
+Online/in-person interviews
+For interviewing friends, we are interviewing individually
+# Initial round of user research [+3.5]
+[+2] Prepare interview questions/script
+How long do you take to get ready? How much of it is figuring out your outfit? Does the duration depend on the time of the day?
+How much do you think about your fashion?
+Where do you shop for clothes? How much do you think about sustainability when buying clothes?
+What methods would you use to upload your clothes onto the app?
+drawing, description to AI, uploading picture
