@@ -22,6 +22,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1dce4859-627b-40d0-9c6b-0b8b64bf1808"
+      }
+    },
+    "owner": "nitindhami"
   }
 }
