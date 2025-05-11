@@ -15,7 +15,7 @@ const clothingItems = [
   { icon: 'tie', label: 'Tie', type: null },
   { icon: 'hanger', label: 'Full Outfit', type: null },
   { icon: 'shoe-heel', label: 'Heels', type: 'shoes' as const },
-  { icon: 'pants', label: 'Pants', type: 'pants' as const },
+  { icon: 'archive', label: 'Pants', type: 'pants' as const },
 ];
 
 export default function HomeScreen() {
