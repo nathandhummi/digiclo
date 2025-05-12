@@ -1,3 +1,6 @@
+import 'react-native-url-polyfill/auto';
+
+import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
@@ -9,7 +12,7 @@ import ProfileScreen from './screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-export default function App() {
+function MainApp() {
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -39,6 +42,8 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+registerRootComponent(MainApp);
 
 const styles = StyleSheet.create({
   container: {

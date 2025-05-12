@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Digiclo",
+    "entryPoint": "./src/App.tsx",
     "slug": "digiclo",
     "version": "1.0.0",
     "orientation": "portrait",
