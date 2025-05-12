@@ -4,12 +4,12 @@
     "slug": "digiclo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/chromehearts.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/chromehearts.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -19,9 +19,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/stussy.png",
+        "backgroundColor": "#000000"
       }
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1dce4859-627b-40d0-9c6b-0b8b64bf1808"
+      }
+    },
+    "owner": "nitindhami"
   }
 }
