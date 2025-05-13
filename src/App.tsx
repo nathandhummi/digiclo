@@ -1,5 +1,5 @@
 import 'react-native-url-polyfill/auto';
-
+import React, {useState} from 'react';
 import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import LoginScreen from './screens/LoginScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,17 +44,19 @@ function MainApp() {
   );
 }
 
-registerRootComponent(MainApp);
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-}); 
+  return (
+    <NavigationContainer>
+      {isLoggedIn ? (
+        <MainApp />
+      ) : (
+        <LoginScreen setIsLoggedIn={setIsLoggedIn} />
+      )}
+    </NavigationContainer>
+  );
+};
+
+registerRootComponent(App);
+
