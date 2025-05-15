@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(express.json()); // for parsing application/json
+app.use(express.json({ limit: '10mb' })); // for parsing application/json
 app.use(cors());         // enable CORS for frontend-backend communication
 
 app.use('/api/upload', uploadRoutes);
@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
     // app.use('/api/clothes', clothesRoutes);
     // app.use('/api/upload', uploadRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
