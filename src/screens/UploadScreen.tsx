@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image } from 'react-native';
+import { View, Text, TextInput, Button, Image, SafeAreaView, ScrollView } from 'react-native';
+
 import * as ImagePicker from 'expo-image-picker';
 
 import { BACKEND_URL } from '../config';
@@ -66,13 +67,20 @@ export default function UploadScreen() {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Button title="Pick Image" onPress={pickImage} />
-      {image && <Image source={{ uri: image }} style={{ width: 200, height: 200, marginVertical: 10 }} />}
-      <TextInput placeholder="Name" value={name} onChangeText={setName} />
-      <TextInput placeholder="Type (e.g. shirt)" value={type} onChangeText={setType} />
-      <TextInput placeholder="Color" value={color} onChangeText={setColor} />
-      <Button title="Upload Clothing Item" onPress={saveClothingItem} />
-    </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        <Button title="Pick Image" onPress={pickImage} />
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={{ width: 200, height: 200, marginVertical: 10 }}
+          />
+        )}
+        <TextInput placeholder="Name" value={name} onChangeText={setName} />
+        <TextInput placeholder="Type (e.g. shirt)" value={type} onChangeText={setType} />
+        <TextInput placeholder="Color" value={color} onChangeText={setColor} />
+        <Button title="Upload Clothing Item" onPress={saveClothingItem} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
