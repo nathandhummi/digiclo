@@ -10,6 +10,7 @@ import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -46,13 +47,22 @@ function MainApp() {
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authScreen, setAuthScreen] = useState<'login' | 'signup'>('login');
 
   return (
     <NavigationContainer>
       {isLoggedIn ? (
         <MainApp />
+      ) : authScreen === 'login' ?(
+        <LoginScreen 
+          setIsLoggedIn={setIsLoggedIn}
+          switchToSignup={() => setAuthScreen('signup')}
+        />
       ) : (
-        <LoginScreen setIsLoggedIn={setIsLoggedIn} />
+        <SignupScreen
+          setIsLoggedIn={setIsLoggedIn}
+          switchToLogin={() => setAuthScreen('login')}
+        /> 
       )}
     </NavigationContainer>
   );
