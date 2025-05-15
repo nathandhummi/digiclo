@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AvatarBase from '../components/LayeredAvatar/AvatarBase';
 import ClothingLayer from '../components/LayeredAvatar/ClothingLayer';
@@ -18,7 +18,18 @@ const clothingItems = [
   { icon: 'archive', label: 'Pants', type: 'pants' as const },
 ];
 
+const categoryIcons = {
+  shirt: 'tshirt-crew',
+  pants: 'archive',
+  shoes: 'shoe-formal',
+  accessories: 'hat-fedora',
+};
+
+const categories = ['shirt', 'pants', 'shoes', 'accessories'] as const;
+
 export default function HomeScreen() {
+  const [mode, setMode] = useState<'pieces' | 'outfits'>('pieces');
+  const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>('shirt');
   const [selectedClothing, setSelectedClothing] = useState<{
     shirt?: string;
     pants?: string;
@@ -29,42 +40,74 @@ export default function HomeScreen() {
     if (type) {
       setSelectedClothing(prev => ({
         ...prev,
-        [type]: prev[type] === label ? undefined : label
+        [type]: prev[type] === label ? undefined : label,
       }));
     }
   };
 
+  const filteredItems = clothingItems.filter(item => {
+    if (mode === 'outfits') return item.label === 'Full Outfit';
+    if (selectedCategory === 'accessories') return item.type === null;
+    return item.type === selectedCategory;
+  });
+
   return (
     <View style={styles.container}>
-      <View style={styles.splitContainer}>
-        <View style={styles.leftHalf}>
-          <Text style={styles.title}>Wardrobe</Text>
-          <ScrollView contentContainerStyle={styles.gridContainer}>
-            {clothingItems.map((item, index) => (
-              <ClothingItem
-                key={index}
-                icon={item.icon as any}
-                label={item.label}
-                onPress={() => handleItemPress(item.label, item.type)}
-                isSelected={item.type ? selectedClothing[item.type] === item.label : false}
-              />
-            ))}
-          </ScrollView>
+      <View style={styles.sidebar}>
+        {/* Top Toggle */}
+        <View style={styles.toggleSection}>
+          <TouchableOpacity onPress={() => setMode('pieces')} style={styles.toggleButton}>
+            <MaterialCommunityIcons
+              name="tshirt-crew"
+              style={[styles.icon, mode === 'pieces' && styles.activeIcon]}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setMode('outfits')} style={styles.toggleButton}>
+            <MaterialCommunityIcons
+              name="hanger"
+              style={[styles.icon, mode === 'outfits' && styles.activeIcon]}
+            />
+          </TouchableOpacity>
         </View>
-        <View style={styles.divider} />
-        <View style={styles.rightHalf}>
-          <View style={styles.avatarContainer}>
-            <AvatarBase />
-            {selectedClothing.shirt && (
-              <ClothingLayer type="shirt" color="#4A90E2" />
-            )}
-            {selectedClothing.pants && (
-              <ClothingLayer type="pants" color="#2ECC71" />
-            )}
-            {selectedClothing.shoes && (
-              <ClothingLayer type="shoes" color="#E74C3C" />
-            )}
+
+        {/* Clothing Items */}
+        <ScrollView style={styles.clothingList}>
+          {filteredItems.map((item, index) => (
+            <ClothingItem
+              key={index}
+              icon={item.icon as any}
+              label={item.label}
+              onPress={() => handleItemPress(item.label, item.type)}
+              isSelected={item.type ? selectedClothing[item.type] === item.label : false}
+            />
+          ))}
+        </ScrollView>
+
+        {/* Bottom Category Bar (only in "pieces" mode) */}
+        {mode === 'pieces' && (
+          <View style={styles.categoryBar}>
+            {categories.map(cat => (
+              <TouchableOpacity key={cat} onPress={() => setSelectedCategory(cat)}>
+                <MaterialCommunityIcons
+                  name={categoryIcons[cat]}
+                  style={[
+                    styles.categoryIcon,
+                    selectedCategory === cat && styles.activeCategoryIcon,
+                  ]}
+                />
+              </TouchableOpacity>
+            ))}
           </View>
+        )}
+      </View>
+
+      {/* Avatar View */}
+      <View style={styles.avatarArea}>
+        <View style={styles.avatarContainer}>
+          <AvatarBase />
+          {selectedClothing.shirt && <ClothingLayer type="shirt" color="#4A90E2" />}
+          {selectedClothing.pants && <ClothingLayer type="pants" color="#2ECC71" />}
+          {selectedClothing.shoes && <ClothingLayer type="shoes" color="#E74C3C" />}
         </View>
       </View>
     </View>
@@ -74,40 +117,65 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  splitContainer: {
-    flex: 1,
     flexDirection: 'row',
+    backgroundColor: '#ffffff',
   },
-  leftHalf: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
+  sidebar: {
+    width: '32%',
+    backgroundColor: '#ffffff',
+    borderRightColor: '#e0e0e0',
+    borderRightWidth: 0.5,
+    justifyContent: 'space-between',
   },
-  rightHalf: {
+  toggleSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 0.5,
+  },
+  toggleButton: {
+    paddingHorizontal: 12,
+  },
+  icon: {
+    fontSize: 28,
+    color: '#bbb',
+    marginVertical: 0,
+    marginHorizontal: 4,
+  },
+  activeIcon: {
+    color: '#111',
+  },
+  clothingList: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    paddingHorizontal: 12,
+  },
+  categoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 14,
+    borderTopColor: '#e0e0e0',
+    borderTopWidth: 0.5,
+  },
+  categoryIcon: {
+    fontSize: 24,
+    color: '#ccc',
+  },
+  activeCategoryIcon: {
+    color: '#000',
+  },
+  avatarArea: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  divider: {
-    width: 1,
-    backgroundColor: '#000',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
     padding: 16,
-    textAlign: 'center',
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 5,
   },
   avatarContainer: {
-    width: '80%',
+    width: '100%',
+    maxWidth: 350,
     aspectRatio: 1,
     position: 'relative',
+    flexShrink: 1,
   },
-}); 
+});
