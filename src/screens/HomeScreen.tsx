@@ -1,48 +1,41 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AvatarBase from '../components/LayeredAvatar/AvatarBase';
-import ClothingLayer from '../components/LayeredAvatar/ClothingLayer';
-import ClothingItem from '../components/ClothingItem';
-
-const clothingItems = [
-  { icon: 'tshirt-crew', label: 'T-Shirt', type: 'shirt' as const },
-  { icon: 'tshirt-v', label: 'V-Neck', type: 'shirt' as const },
-  { icon: 'shoe-formal', label: 'Formal Shoes', type: 'shoes' as const },
-  { icon: 'shoe-sneaker', label: 'Sneakers', type: 'shoes' as const },
-  { icon: 'hat-fedora', label: 'Hat', type: null },
-  { icon: 'sunglasses', label: 'Sunglasses', type: null },
-  { icon: 'tie', label: 'Tie', type: null },
-  { icon: 'hanger', label: 'Full Outfit', type: null },
-  { icon: 'shoe-heel', label: 'Heels', type: 'shoes' as const },
-  { icon: 'archive', label: 'Pants', type: 'pants' as const },
-];
-
-const categoryIcons = {
-  shirt: 'tshirt-crew',
-  pants: 'archive',
-  shoes: 'shoe-formal',
-  accessories: 'hat-fedora',
-};
-
-const categories = ['shirt', 'pants', 'shoes', 'accessories'] as const;
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 export default function HomeScreen() {
-  const [mode, setMode] = useState<'pieces' | 'outfits'>('pieces');
-  const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>('shirt');
-  const [selectedClothing, setSelectedClothing] = useState<{
-    shirt?: string;
-    pants?: string;
-    shoes?: string;
-  }>({});
+  const [clothingItems, setClothingItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleItemPress = (label: string, type: 'shirt' | 'pants' | 'shoes' | null) => {
-    if (type) {
-      setSelectedClothing(prev => ({
-        ...prev,
-        [type]: prev[type] === label ? undefined : label,
-      }));
+  const fetchClothing = async () => {
+    try {
+      const res = await fetch('https://localhost:4000/api/clothes');
+      const data = await res.json();
+      setClothingItems(data);
+    } catch (err) {
+      console.error('Failed to fetch clothing items', err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const fetchClothing = async () => {
+      try {
+        const res = await fetch('http://localhost:4000/api/clothes');
+        const data = await res.json();
+        console.log('Fetched:', data);
+        setClothingItems(data);
+      } catch (err) {
+        console.error('Failed to fetch:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClothing();
+  }, []);
+
+  const handleItemPress = (itemId: string) => {
+    console.log('Selected:', itemId);
   };
 
   const filteredItems = clothingItems.filter(item => {
@@ -53,63 +46,25 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.sidebar}>
-        {/* Top Toggle */}
-        <View style={styles.toggleSection}>
-          <TouchableOpacity onPress={() => setMode('pieces')} style={styles.toggleButton}>
-            <MaterialCommunityIcons
-              name="tshirt-crew"
-              style={[styles.icon, mode === 'pieces' && styles.activeIcon]}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setMode('outfits')} style={styles.toggleButton}>
-            <MaterialCommunityIcons
-              name="hanger"
-              style={[styles.icon, mode === 'outfits' && styles.activeIcon]}
-            />
-          </TouchableOpacity>
+      <Text style={styles.title}>Wardrobe</Text>
+      {loading ? (
+        <View>
+          <ActivityIndicator size="large" />
+          <Text>{JSON.stringify(clothingItems, null, 2)}</Text>
         </View>
-
-        {/* Clothing Items */}
-        <ScrollView style={styles.clothingList}>
-          {filteredItems.map((item, index) => (
-            <ClothingItem
-              key={index}
-              icon={item.icon as any}
-              label={item.label}
-              onPress={() => handleItemPress(item.label, item.type)}
-              isSelected={item.type ? selectedClothing[item.type] === item.label : false}
-            />
+      ) : (
+        <ScrollView contentContainerStyle={styles.gridContainer}>
+          {clothingItems.map((item) => (
+            <TouchableOpacity key={item._id} onPress={() => handleItemPress(item._id)}>
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.clothingImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* Bottom Category Bar (only in "pieces" mode) */}
-        {mode === 'pieces' && (
-          <View style={styles.categoryBar}>
-            {categories.map(cat => (
-              <TouchableOpacity key={cat} onPress={() => setSelectedCategory(cat)}>
-                <MaterialCommunityIcons
-                  name={categoryIcons[cat]}
-                  style={[
-                    styles.categoryIcon,
-                    selectedCategory === cat && styles.activeCategoryIcon,
-                  ]}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Avatar View */}
-      <View style={styles.avatarArea}>
-        <View style={styles.avatarContainer}>
-          <AvatarBase />
-          {selectedClothing.shirt && <ClothingLayer type="shirt" color="#4A90E2" />}
-          {selectedClothing.pants && <ClothingLayer type="pants" color="#2ECC71" />}
-          {selectedClothing.shoes && <ClothingLayer type="shoes" color="#E74C3C" />}
-        </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -171,11 +126,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
   },
-  avatarContainer: {
-    width: '100%',
-    maxWidth: 350,
-    aspectRatio: 1,
-    position: 'relative',
-    flexShrink: 1,
+  clothingImage: {
+    width: 100,
+    height: 100,
+    margin: 8,
+    borderRadius: 8,
   },
-});
+}); 
