@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect} from 'react';
 import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView} from 'react-native';
+import * as Font from 'expo-font';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -12,6 +13,19 @@ type RootStackParamList = {
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
+
+    const [fontsLoaded, setFontsLoaded] = useState(false);
+
+    useEffect(() => {
+        Font.loadAsync({
+            'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
+            'Inter-Bold': require('../../assets/fonts/Inter-Bold.ttf'),
+            'Inter-Medium': require('../../assets/fonts/Inter-Medium.ttf'),
+        })
+        .then(() => setFontsLoaded(true))
+        .catch(err => console.warn('Font load error:', err));
+    }, []);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -63,12 +77,13 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-    title: { fontSize: 32, fontWeight: 'bold', color: '#61dafb', textAlign: 'center', marginBottom: 20 },
+    title: { fontFamily: 'Inter-Bold', fontSize: 32, fontWeight: 'bold', color: '#61dafb', textAlign: 'center', marginBottom: 20 },
     container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'white'},
     form: { backgroundColor: '#282c34', padding: 20, borderRadius: 10 },
-    header: { color: 'white', fontSize: 24, marginBottom: 20 },
-    label: { color: 'white', marginBottom: 5 },
+    header: { fontFamily: 'Inter-Regular', color: 'white', fontSize: 24, marginBottom: 20 },
+    label: { fontFamily: 'Inter-Regular', color: 'white', marginBottom: 5 },
     input: { 
+        fontFamily: 'Inter-Regular',
         backgroundColor: 'white',
         borderWidth: 1, 
         borderColor: 'white',
@@ -77,6 +92,6 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         color: 'black'
     },
-    error: { color: 'red', marginBottom: 10 },
-    footer: { color: 'white', marginTop: 20, textAlign: 'center' },
+    error: { fontFamily: 'Inter-Regular', color: 'red', marginBottom: 10 },
+    footer: { fontFamily: 'Inter-Regular', color: 'white', marginTop: 20, textAlign: 'center' },
 });
