@@ -10,6 +10,8 @@ export default function UploadScreen() {
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [color, setColor] = useState('');
+  const [uploading, setUploading] = useState(false);
+
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,38 +34,54 @@ export default function UploadScreen() {
   const uploadImage = async () => {
     if (!image) return null;
 
-    const res = await fetch(`${BACKEND_URL}/api/upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image }),
-    });
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image }),
+      });
 
-    const data = await res.json();
-    return data.url;
+      const data = await res.json();
+      console.log('Upload response:', data);
+      return data.url;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      return null;
+    }
   };
 
   const saveClothingItem = async () => {
-    const imageUrl = await uploadImage();
-    if (!imageUrl) {
-      alert('Image upload failed');
-      return;
+    if (uploading) return; // prevent double-tap
+    setUploading(true);
+
+    try {
+      const imageUrl = await uploadImage();
+      if (!imageUrl) {
+        alert('Image upload failed');
+        return;
+      }
+
+      const clothingItem = { name, type, color, imageUrl };
+
+      const res = await fetch(`${BACKEND_URL}/api/clothes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clothingItem),
+      });
+
+      const data = await res.json();
+      console.log('Saved clothing item:', data);
+      alert('Upload complete!');
+      setImage(null);
+      setName('');
+      setType('');
+      setColor('');
+    } catch(error) {
+      console.error('Upload error:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
     }
-
-    const clothingItem = { name, type, color, imageUrl };
-
-    const res = await fetch(`${BACKEND_URL}/api/clothes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(clothingItem),
-    });
-
-    const data = await res.json();
-    console.log('Saved clothing item:', data);
-    alert('Upload complete!');
-    setImage(null);
-    setName('');
-    setType('');
-    setColor('');
   };
 
   return (
@@ -79,7 +97,11 @@ export default function UploadScreen() {
         <TextInput placeholder="Name" value={name} onChangeText={setName} />
         <TextInput placeholder="Type (e.g. shirt)" value={type} onChangeText={setType} />
         <TextInput placeholder="Color" value={color} onChangeText={setColor} />
-        <Button title="Upload Clothing Item" onPress={saveClothingItem} />
+        <Button
+          title={uploading ? 'Uploading...' : 'Upload Clothing Item'}
+          onPress={saveClothingItem}
+          disabled={uploading}
+        />
       </ScrollView>
     </SafeAreaView>
   );
