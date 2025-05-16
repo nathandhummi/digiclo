@@ -1,16 +1,24 @@
 import React, {useState} from 'react';
 import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type Props = {
-    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-    switchToLogin: () => void;
+type RootStackParamList = {
+    Login: { setIsLoggedIn: (value: boolean) => void };
+    Signup: { setIsLoggedIn: (value: boolean) => void };
+    MainApp: undefined;
 };
 
-const SignupScreen : React.FC<Props> = ({setIsLoggedIn, switchToLogin}) => {
+type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
+
+const SignupScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const navigation = useNavigation<SignupScreenNavigationProp>();
+    const route = useRoute();
+    const { setIsLoggedIn } = route.params as RootStackParamList['Signup'];
     
     const handleSignup = () => {
         if (email === '' || password === '' || confirmPassword === '') {
@@ -33,31 +41,31 @@ const SignupScreen : React.FC<Props> = ({setIsLoggedIn, switchToLogin}) => {
                 <Text style={styles.header}>Create an Account</Text>
                 <Text style={styles.label}>Email</Text>
                 <TextInput
-                    placeholder = "Enter your email"
-                    value = {email}
-                    onChangeText = {setEmail}
+                    placeholder="Enter your email"
+                    value={email}
+                    onChangeText={setEmail}
                     keyboardType='email-address'
-                    style = {styles.input}
+                    style={styles.input}
                 />
                 <Text style={styles.label}>Password</Text>
                 <TextInput
-                    placeholder = "Enter your password"
-                    value = {password}
-                    onChangeText = {setPassword}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChangeText={setPassword}
                     secureTextEntry
-                    style = {styles.input}
+                    style={styles.input}
                 />
                 <Text style={styles.label}>Confirm Password</Text>
                 <TextInput
-                    placeholder = "Confirm your password"
-                    value = {confirmPassword}
-                    onChangeText = {setConfirmPassword}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
                     secureTextEntry
-                    style = {styles.input}
+                    style={styles.input}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Sign Up" onPress={handleSignup} />
-                <Text style={styles.footer} onPress={switchToLogin}>
+                <Text style={styles.footer} onPress={() => navigation.navigate('Login', { setIsLoggedIn })}>
                     Already have an account? Login
                 </Text>
             </View>
@@ -73,7 +81,15 @@ const styles = StyleSheet.create({
     form: { backgroundColor: '#282c34', padding: 20, borderRadius: 10 },
     header: { color: 'white', fontSize: 24, marginBottom: 20 },
     label: { color: 'white', marginBottom: 5 },
-    input: { borderWidth: 1, borderColor: 'white',padding: 10, marginBottom: 10, borderRadius: 5 },
+    input: { 
+        backgroundColor: 'white',
+        borderWidth: 1, 
+        borderColor: 'white',
+        padding: 10, 
+        marginBottom: 10, 
+        borderRadius: 5,
+        color: 'black'
+    },
     error: { color: 'red', marginBottom: 10 },
     footer: { color: 'white', marginTop: 20, textAlign: 'center' },
 });
