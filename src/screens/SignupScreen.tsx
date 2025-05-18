@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
-import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import * as Font from 'expo-font';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -12,6 +13,20 @@ type RootStackParamList = {
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 
 const SignupScreen = () => {
+
+    const [fontsLoaded, setFontsLoaded] = useState(false);
+
+    useEffect(() => {
+        Font.loadAsync({
+            'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
+            'Inter-Bold': require('../../assets/fonts/Inter-Bold.ttf'),
+            'Inter-Medium': require('../../assets/fonts/Inter-Medium.ttf'),
+            'Inter-SemiBold': require('../../assets/fonts/Inter-SemiBold.ttf'),
+        })
+        .then(() => setFontsLoaded(true))
+        .catch(err => console.warn('Font load error: ', err));
+    }, []);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,37 +51,44 @@ const SignupScreen = () => {
 
     return (
         <KeyboardAvoidingView behavior="padding" style={styles.container}>
-            <Text style={styles.title}>DigiClo</Text>
+            <Text style={styles.title}>DIGICLO</Text>
             <View style={styles.form}>
                 <Text style={styles.header}>Create an Account</Text>
-                <Text style={styles.label}>Email</Text>
+
                 <TextInput
-                    placeholder="Enter your email"
+                    placeholder="Email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType='email-address'
                     style={styles.input}
                 />
-                <Text style={styles.label}>Password</Text>
+
                 <TextInput
-                    placeholder="Enter your password"
+                    placeholder="Password"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                     style={styles.input}
                 />
-                <Text style={styles.label}>Confirm Password</Text>
+                
                 <TextInput
-                    placeholder="Confirm your password"
+                    placeholder="Confirm Password"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
                     style={styles.input}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
-                <Button title="Sign Up" onPress={handleSignup} />
-                <Text style={styles.footer} onPress={() => navigation.navigate('Login', { setIsLoggedIn })}>
-                    Already have an account? Login
+
+                <TouchableOpacity style={styles.button} onPress={handleSignup}>
+                    <Text style={styles.buttonText}>Sign Up</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.footer}>
+                    Already have an account?{' '}
+                    <Text style={styles.link} onPress={() => navigation.navigate('Login', { setIsLoggedIn })}>
+                        Login
+                    </Text>
                 </Text>
             </View>
         </KeyboardAvoidingView>
@@ -76,20 +98,49 @@ const SignupScreen = () => {
 export default SignupScreen;
 
 const styles = StyleSheet.create({
-    title: { fontSize: 32, fontWeight: 'bold', color: '#61dafb', textAlign: 'center', marginBottom: 20 },
-    container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'white'},
-    form: { backgroundColor: '#282c34', padding: 20, borderRadius: 10 },
-    header: { color: 'white', fontSize: 24, marginBottom: 20 },
-    label: { color: 'white', marginBottom: 5 },
+    title: { fontFamily: 'Inter-Bold', fontSize: 32, color: '#172251', textAlign: 'center', marginBottom: 20 },
+    container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'white'},
+    form: { backgroundColor: 'white', padding: 20, borderRadius: 10 },
+    header: { fontFamily: 'Inter-SemiBold', color: '#293869', fontSize: 20, marginBottom: 20 },
+    label: { fontFamily: 'Inter-Regular', color: 'white', marginBottom: 5 },
     input: { 
+        fontFamily: 'Inter-Regular',
         backgroundColor: 'white',
         borderWidth: 1, 
         borderColor: 'white',
         padding: 10, 
         marginBottom: 10, 
         borderRadius: 5,
-        color: 'black'
+        color: '#3A4E81',
+
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
-    error: { color: 'red', marginBottom: 10 },
-    footer: { color: 'white', marginTop: 20, textAlign: 'center' },
+    button: {
+        backgroundColor: '#172251',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        alignItems: 'center',
+
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    buttonText: {
+        fontFamily: 'Inter-Bold',
+        color: 'white',
+        fontSize: 16,
+    },
+    error: { fontFamily: 'Inter-Regular', color: '#BF0E26', marginBottom: 10 },
+    footer: { fontFamily: 'Inter-Regular', color: '293869', marginTop: 20, textAlign: 'center' },
+    link: {
+        fontFamily: 'Inter-Bold',
+        color: '#4B6599',
+    },
 });
