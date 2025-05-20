@@ -38,12 +38,6 @@ export default function HomeScreen() {
     console.log('Selected:', itemId);
   };
 
-  const filteredItems = clothingItems.filter(item => {
-    if (mode === 'outfits') return item.label === 'Full Outfit';
-    if (selectedCategory === 'accessories') return item.type === null;
-    return item.type === selectedCategory;
-  });
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Wardrobe</Text>
@@ -72,59 +66,36 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
-  sidebar: {
-    width: '32%',
-    backgroundColor: '#ffffff',
-    borderRightColor: '#e0e0e0',
-    borderRightWidth: 0.5,
-    justifyContent: 'space-between',
-  },
-  toggleSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomColor: '#e0e0e0',
-    borderBottomWidth: 0.5,
-  },
-  toggleButton: {
-    paddingHorizontal: 12,
-  },
-  icon: {
-    fontSize: 28,
-    color: '#bbb',
-    marginVertical: 0,
-    marginHorizontal: 4,
-  },
-  activeIcon: {
-    color: '#111',
-  },
-  clothingList: {
+  splitContainer: {
     flex: 1,
-    paddingHorizontal: 12,
-  },
-  categoryBar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 14,
-    borderTopColor: '#e0e0e0',
-    borderTopWidth: 0.5,
   },
-  categoryIcon: {
-    fontSize: 24,
-    color: '#ccc',
-  },
-  activeCategoryIcon: {
-    color: '#000',
-  },
-  avatarArea: {
+  leftHalf: {
     flex: 1,
+    backgroundColor: '#f0f0f0',
+  },
+  rightHalf: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  divider: {
+    width: 1,
+    backgroundColor: '#000',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     padding: 16,
+    textAlign: 'center',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 5,
   },
   clothingImage: {
     width: 100,
