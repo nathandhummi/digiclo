@@ -12,6 +12,7 @@ import UploadScreen from './screens/UploadScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import CreateOutfit from './screens/createOutfit';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -65,12 +66,17 @@ const App = () => {
             />
           </>
         ) : (
-          <Stack.Screen name="MainApp" component={MainApp} />
+          <>
+            <Stack.Screen name="MainApp" component={MainApp} />
+            <Stack.Screen name="CreateOutfit" component={CreateOutfit} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+
 
 registerRootComponent(App);
 

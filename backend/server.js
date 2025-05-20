@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 
 import uploadRoutes from './routes/uploadRoutes.js';
 import clothesRoutes from './routes/clothesRoutes.js';
+import outfitRoutes from './routes/outfitRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(cors());         // enable CORS for frontend-backend communication
 
 app.use('/api/upload', uploadRoutes);
 app.use('/api/clothes', clothesRoutes);
+app.use('/api/outfits', outfitRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {

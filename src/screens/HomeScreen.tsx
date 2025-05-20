@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types'; // Adjust path if needed
+import { Button } from 'react-native'; // Add Button import
 
 export default function HomeScreen() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const fetchClothing = async () => {
     try {
@@ -41,6 +46,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Wardrobe</Text>
+      <Button title="Style an Outfit" onPress={() => navigation.navigate('CreateOutfit')} />
       {loading ? (
         <View>
           <ActivityIndicator size="large" />

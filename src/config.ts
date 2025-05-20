@@ -1,1 +1,1 @@
-export const BACKEND_URL = 'https://cad1-2607-f010-2e9-13-9855-1fd6-8505-cca8.ngrok-free.app';
+export const BACKEND_URL = 'https://8b4e-2607-f010-2a7-301f-45d5-47d9-cab2-84ae.ngrok-free.app';
