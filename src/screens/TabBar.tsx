@@ -18,7 +18,7 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
 
   const handleCreateOutfit = () => {
     setModalVisible(false);
-    navigation.navigate('Profile'); // or a dedicated "Create Outfit" screen if needed
+    navigation.navigate('Outfits');
   };
 
   return (
@@ -53,8 +53,8 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
             case 'Upload':
               iconName = 'add-circle'; // Use solid icon always
               break;
-            case 'Profile':
-              iconName = isFocused ? 'person' : 'person-outline';
+            case 'Outfits':
+              iconName = isFocused ? 'shirt' : 'shirt-outline';
               break;
             default:
               iconName = 'ellipse';

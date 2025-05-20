@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Dimensions } from 'react-native';
+import { ViewStyle } from 'react-native';
+
 
 export default function HomeScreen() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const screenHeight = Dimensions.get('window').height;
+  const usableHeight = screenHeight - 80; // approx height of tab bar
+  const sectionStyle: ViewStyle = {
+    height: usableHeight / 3,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    justifyContent: 'flex-start', 
+  };
 
   const fetchClothing = async () => {
     try {
@@ -38,21 +51,25 @@ export default function HomeScreen() {
     console.log('Selected:', itemId);
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Wardrobe</Text>
-      {loading ? (
-        <View>
-          <ActivityIndicator size="large" />
-          <Text>{JSON.stringify(clothingItems, null, 2)}</Text>
-        </View>
+  const renderSection = (label: string, items: any[]) => (
+    <View style={[styles.section, sectionStyle]}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionLabel}>{label}:</Text>
+        <Ionicons name="arrow-forward" size={18} color="gray" />
+      </View>
+      {items.length === 0 ? (
+        <Text style={styles.emptyText}>No {label.toLowerCase()} yet</Text>
       ) : (
-        <ScrollView contentContainerStyle={styles.gridContainer}>
-          {clothingItems.map((item) => (
-            <TouchableOpacity key={item._id} onPress={() => handleItemPress(item._id)}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {items.map((item) => (
+            <TouchableOpacity
+              key={item._id}
+              onPress={() => handleItemPress(item._id)}
+              style={styles.itemContainer}
+            >
               <Image
                 source={{ uri: item.imageUrl }}
-                style={styles.clothingImage}
+                style={styles.itemImage}
                 resizeMode="cover"
               />
             </TouchableOpacity>
@@ -61,6 +78,22 @@ export default function HomeScreen() {
       )}
     </View>
   );
+
+  const outfits = clothingItems.filter(item => item.type === 'outfit');
+  const tops = clothingItems.filter(item => item.type === 'top');
+  const bottoms = clothingItems.filter(item => item.type === 'bottom');
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    {renderSection('OUTFITS', outfits)}
+    <View style={styles.divider} />
+
+    {renderSection('TOPS', tops)}
+    <View style={styles.divider} />
+
+    {renderSection('BOTTOMS', bottoms)}
+  </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -68,39 +101,46 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  splitContainer: {
-    flex: 1,
+  contentContainer: {
+    paddingVertical: 16,
+  },
+  section: {
+    width: '100%',
+  },
+  sectionHeader: {
     flexDirection: 'row',
-  },
-  leftHalf: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-  },
-  rightHalf: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   divider: {
-    width: 1,
-    backgroundColor: '#000',
+    height: 1,
+    backgroundColor: '#ddd',
+    marginHorizontal: 16,
+    marginVertical: 12,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 16,
-    textAlign: 'center',
+  itemContainer: {
+    marginHorizontal: 8,
+    width: 120,
+    height: 150,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
   },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 5,
+  emptyText: {
+    marginLeft: 16,
+    color: 'gray',
+    fontSize: 14,
+    fontStyle: 'italic',
   },
-  clothingImage: {
-    width: 100,
-    height: 100,
-    margin: 8,
-    borderRadius: 8,
+  itemImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
-}); 
+});
