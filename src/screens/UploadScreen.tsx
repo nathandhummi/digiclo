@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Image, SafeAreaView, ScrollView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 import * as ImagePicker from 'expo-image-picker';
 
 import { BACKEND_URL } from '../config';
 
+const labelToCategory: Record<string, string> = {
+  'T-Shirt': 'Top',
+  'Hoodie': 'Top',
+  'Sweater': 'Top',
+  'Jeans': 'Bottom',
+  'Shorts': 'Bottom',
+  'Skirt': 'Bottom',
+  'Sneakers': 'Shoes',
+  'Boots': 'Shoes',
+  'Heels': 'Shoes',
+  'Hat': 'Accessory',
+  'Bag': 'Accessory',
+};
+
 export default function UploadScreen() {
   const [image, setImage] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [color, setColor] = useState('');
+  const [label, setLabel] = useState('');
+  const [uploading, setUploading] = useState(false);
+
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,38 +47,58 @@ export default function UploadScreen() {
   const uploadImage = async () => {
     if (!image) return null;
 
-    const res = await fetch(`${BACKEND_URL}/api/upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image }),
-    });
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image }),
+      });
 
-    const data = await res.json();
-    return data.url;
+      const data = await res.json();
+      console.log('Upload response:', data);
+      return data.url;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      return null;
+    }
   };
 
   const saveClothingItem = async () => {
-    const imageUrl = await uploadImage();
-    if (!imageUrl) {
-      alert('Image upload failed');
-      return;
+    if (uploading) return; // prevent double-tap
+    setUploading(true);
+
+    try {
+      const imageUrl = await uploadImage();
+      if (!imageUrl) {
+        alert('Image upload failed');
+        return;
+      }
+
+      const category = labelToCategory[label];
+      if (!label || !category) {
+        alert('Please select a valid label.');
+        return;
+      }
+
+      const clothingItem = { label, category, imageUrl };
+
+      const res = await fetch(`${BACKEND_URL}/api/clothes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clothingItem),
+      });
+
+      const data = await res.json();
+      console.log('Saved clothing item:', data);
+      alert('Upload complete!');
+      setImage(null);
+      setLabel('');
+    } catch(error) {
+      console.error('Upload error:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
     }
-
-    const clothingItem = { name, type, color, imageUrl };
-
-    const res = await fetch(`${BACKEND_URL}/api/clothes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(clothingItem),
-    });
-
-    const data = await res.json();
-    console.log('Saved clothing item:', data);
-    alert('Upload complete!');
-    setImage(null);
-    setName('');
-    setType('');
-    setColor('');
   };
 
   return (
@@ -76,10 +111,22 @@ export default function UploadScreen() {
             style={{ width: 200, height: 200, marginVertical: 10 }}
           />
         )}
-        <TextInput placeholder="Name" value={name} onChangeText={setName} />
-        <TextInput placeholder="Type (e.g. shirt)" value={type} onChangeText={setType} />
-        <TextInput placeholder="Color" value={color} onChangeText={setColor} />
-        <Button title="Upload Clothing Item" onPress={saveClothingItem} />
+        <Text style={{ marginTop: 10, fontWeight: 'bold' }}>Select Clothing Label:</Text>
+        <Picker
+          selectedValue={label}
+          onValueChange={(value: string) => setLabel(value)}
+          style={{ marginVertical: 10 }}
+        >
+          <Picker.Item label="Select Label..." value="" />
+          {Object.keys(labelToCategory).map((item) => (
+            <Picker.Item key={item} label={item} value={item} />
+          ))}
+        </Picker>
+        <Button
+          title={uploading ? 'Uploading...' : 'Upload Clothing Item'}
+          onPress={saveClothingItem}
+          disabled={uploading}
+        />
       </ScrollView>
     </SafeAreaView>
   );
