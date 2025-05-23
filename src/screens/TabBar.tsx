@@ -18,7 +18,7 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
 
   const handleCreateOutfit = () => {
     setModalVisible(false);
-    navigation.navigate('Outfits');
+    navigation.navigate('CreateOutfit');
   };
 
   return (

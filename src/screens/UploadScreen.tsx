@@ -8,17 +8,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { BACKEND_URL } from '../config';
 
 const labelToCategory: Record<string, string> = {
-  'T-Shirt': 'Top',
-  'Hoodie': 'Top',
-  'Sweater': 'Top',
-  'Jeans': 'Bottom',
-  'Shorts': 'Bottom',
-  'Skirt': 'Bottom',
-  'Sneakers': 'Shoes',
-  'Boots': 'Shoes',
-  'Heels': 'Shoes',
-  'Hat': 'Accessory',
-  'Bag': 'Accessory',
+  'T-Shirt': 'top',
+  'Hoodie': 'top',
+  'Sweater': 'top',
+  'Jeans': 'bottom',
+  'Shorts': 'bottom',
+  'Skirt': 'bottom',
+  'Sneakers': 'shoe',
+  'Boots': 'shoe',
+  'Heels': 'shoe',
+  'Hat': 'accessory',
+  'Bag': 'accessory',
 };
 
 export default function UploadScreen() {

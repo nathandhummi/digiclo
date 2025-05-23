@@ -14,7 +14,7 @@ import OutfitsScreen from './screens/OutfitsScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import TabBar from './screens/TabBar';
-import CreateOutfit from './screens/createOutfit';
+import CreateOutfitScreen from './screens/createOutfit';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -54,7 +54,7 @@ const App = () => {
         ) : (
           <>
             <Stack.Screen name="MainApp" component={MainApp} />
-            <Stack.Screen name="CreateOutfit" component={CreateOutfit} />
+            <Stack.Screen name="CreateOutfit" component={CreateOutfitScreen} />
           </>
         )}
       </Stack.Navigator>

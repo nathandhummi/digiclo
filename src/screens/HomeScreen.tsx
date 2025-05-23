@@ -23,18 +23,6 @@ export default function HomeScreen() {
   };
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const fetchClothing = async () => {
-    try {
-      const res = await fetch('https://localhost:4000/api/clothes');
-      const data = await res.json();
-      setClothingItems(data);
-    } catch (err) {
-      console.error('Failed to fetch clothing items', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const fetchClothing = async () => {
       try {
@@ -62,7 +50,6 @@ export default function HomeScreen() {
         <Text style={styles.sectionLabel}>{label}:</Text>
         <Ionicons name="arrow-forward" size={18} color="gray" />
       </View>
-      <Button title="Style an Outfit" onPress={() => navigation.navigate('CreateOutfit')} />
       {items.length === 0 ? (
         <Text style={styles.emptyText}>No {label.toLowerCase()} yet</Text>
       ) : (
@@ -86,8 +73,9 @@ export default function HomeScreen() {
   );
 
   const outfits = clothingItems.filter(item => item.type === 'outfit');
-  const tops = clothingItems.filter(item => item.type === 'top');
-  const bottoms = clothingItems.filter(item => item.type === 'bottom');
+  const tops = clothingItems.filter(item => item.category === 'top');
+  const bottoms = clothingItems.filter(item => item.category === 'bottom');
+  const shoes = clothingItems.filter(item => item.category === 'shoe');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -98,6 +86,9 @@ export default function HomeScreen() {
     <View style={styles.divider} />
 
     {renderSection('BOTTOMS', bottoms)}
+    <View style={styles.divider} />
+
+    {renderSection('SHOES', shoes)}
   </ScrollView>
   );
 }
