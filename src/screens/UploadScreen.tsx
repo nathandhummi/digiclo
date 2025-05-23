@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, Image, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { Dropdown } from 'react-native-element-dropdown';
 
 import * as ImagePicker from 'expo-image-picker';
 
@@ -104,30 +105,148 @@ export default function UploadScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Button title="Pick Image" onPress={pickImage} />
-        {image && (
-          <Image
-            source={{ uri: image }}
-            style={{ width: 200, height: 200, marginVertical: 10 }}
+        <Text style={styles.title}>Upload</Text>
+        <View style={styles.topHalf}>
+          <TouchableOpacity style={image ? styles.imageBoxLarge : styles.uploadButton} onPress={pickImage}>
+            {image ? (
+              <Image source={{ uri : image }} style={styles.imagePreview} />
+            ) : (
+              <Text style={styles.uploadButtonText}>+</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomHalf}>
+          <Text style={styles.label}>Category</Text>
+          <Dropdown 
+            style={{ marginVertical: 10, ...styles.dropdown }}
+            data={Object.keys(labelToCategory).map((item) => ({
+              label: item,
+              value: item,
+            }))}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Category..."
+            value={label}
+            onChange={(item) => setLabel(item.value)}
           />
-        )}
-        <Text style={{ marginTop: 10, fontWeight: 'bold' }}>Select Clothing Label:</Text>
-        <Picker
-          selectedValue={label}
-          onValueChange={(value: string) => setLabel(value)}
-          style={{ marginVertical: 10 }}
-        >
-          <Picker.Item label="Select Label..." value="" />
-          {Object.keys(labelToCategory).map((item) => (
-            <Picker.Item key={item} label={item} value={item} />
-          ))}
-        </Picker>
-        <Button
-          title={uploading ? 'Uploading...' : 'Upload Clothing Item'}
-          onPress={saveClothingItem}
-          disabled={uploading}
-        />
+
+          <TouchableOpacity onPress={saveClothingItem} disabled={uploading} style={[ styles.uploadButtonFullWidth, uploading && { backgroundColor: '#ccc' }, ]}>
+            <Text style={styles.buttonText}>
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 24,
+    padding: 16,
+    textAlign: 'center',
+  },
+
+  uploadButtonFullWidth: {
+    height: 44,
+    borderRadius: 4,
+    backgroundColor: '#172251',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginBottom: 16,
+  },
+
+  // button: {
+  //   backgroundColor: '#172251',
+  //   paddingVertical: 12,
+  //   paddingHorizontal: 20,
+  //   borderRadius: 5,
+  //   alignItems: 'center',
+
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.25,
+  //   shadowRadius: 3.84,
+  //   elevation: 5,
+  // },
+
+  buttonText: {
+    fontFamily: 'Inter-Regular',
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+
+  uploadButton: {
+    backgroundColor: '#172251',
+    width: 160,
+    height: 160,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+
+  imageBoxLarge: {
+    width: 270,
+    height: 270,
+  },
+
+  uploadButtonText: {
+    fontFamily: 'Inter-Bold',
+    color: 'white',
+    fontSize: 30,
+    textAlign: 'center',
+  },
+    
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+    resizeMode: 'cover',
+  },
+
+  // input: {
+  //   height: 44,
+  //   borderWidth: 1,
+  //   borderColor: '#000',
+  //   paddingHorizontal: 10,
+  //   borderRadius: 4,
+  //   fontSize: 16,
+  //   backgroundColor: '#fff',
+  //   marginBottom: 16,
+  // },
+
+  topHalf: {
+    marginTop: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+
+  bottomHalf: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+  },
+
+  label: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 14,
+    marginBottom: 4,
+    color: '#000',
+  },
+
+  dropdown: {
+    height: 44,
+    borderColor: '#000',
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    marginBottom: 16,
+  },
+
+});
