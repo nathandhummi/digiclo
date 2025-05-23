@@ -5,13 +5,14 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { name, type, color, imageUrl } = req.body;
+    const { label, category, imageUrl } = req.body;
 
-    if (!name || !imageUrl) {
-      return res.status(400).json({ error: 'Name and imageUrl are required' });
+
+    if (!label || !category || !imageUrl) {
+      return res.status(400).json({ error: 'Label, category, and imageUrl are required' });
     }
 
-    const newItem = new ClothingItem({ name, type, color, imageUrl });
+    const newItem = new ClothingItem({ label, category, imageUrl });
     await newItem.save();
 
     res.status(201).json(newItem);

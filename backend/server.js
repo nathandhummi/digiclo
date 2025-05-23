@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(express.json({ limit: '10mb' })); // for parsing application/json
+app.use(express.json({ limit: '20mb' })); // for parsing application/json
 app.use(cors());         // enable CORS for frontend-backend communication
 
 app.use('/api/upload', uploadRoutes);

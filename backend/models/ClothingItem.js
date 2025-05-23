@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
 
 const clothingItemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  type: { type: String }, // e.g., "shirt", "pants"
-  color: { type: String },
+  label: { type: String, required: true },
+  category: { type: String, required: true },
   imageUrl: { type: String, required: true },
-});
+}, { timestamps: true });
 
 export default mongoose.model('ClothingItem', clothingItemSchema);
