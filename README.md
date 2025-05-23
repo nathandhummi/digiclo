@@ -12,8 +12,11 @@ Open up another terminal and cd to the backend directory. Then run
    1. npm install
    2. npm run dev
 
-In the home directory, run
+Open up another terminal and in the home directory, run
+   1. npm run tunnel
+
+Finally, in the home directory (in a third terminal), run
    1. npx expo start
 
 ## NOTE: The images will not show up as you need the MONGO URI and Cloudinary API key and secret.
-## Our team will provide that if needed
+### Our team will provide that if needed

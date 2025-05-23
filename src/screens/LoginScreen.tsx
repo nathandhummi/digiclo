@@ -36,7 +36,7 @@ const LoginScreen = () => {
 
     const handleLogin = () => {
         if (email === '' || password === '') {
-            setError('Please fill in all fields');
+            setError('Incorrect email or password');
             return;
         }
         console.log('Logged in with:', email, password);
@@ -46,7 +46,7 @@ const LoginScreen = () => {
 
     return (
         <KeyboardAvoidingView behavior="padding" style={styles.container}>
-            <Text style={styles.title}>DigiClo</Text>
+            <Text style={styles.title}>DIGICLO</Text>
             <View style={styles.form}>
                 <Text style={styles.header}>Login</Text>
 
@@ -74,12 +74,9 @@ const LoginScreen = () => {
                 
                 <Text style={styles.footer}>
                     Don’t have an account?{' '}
-                <Text
-                    style={styles.link}
-                    onPress={() => navigation.navigate('Signup', { setIsLoggedIn })}
-                >
-                    Sign up
-                </Text>
+                    <Text style={styles.link} onPress={() => navigation.navigate('Signup', { setIsLoggedIn })}>
+                        Sign up
+                    </Text>
                 </Text>
             </View>
         </KeyboardAvoidingView>
@@ -89,7 +86,7 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-    title: { fontFamily: 'Inter-Bold', fontSize: 32, fontWeight: 'bold', color: '#172251', textAlign: 'center', marginBottom: 20 },
+    title: { fontFamily: 'Inter-Bold', fontSize: 32, color: '#172251', textAlign: 'center', marginBottom: 20 },
     container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'white'},
     form: { backgroundColor: 'white', padding: 20, borderRadius: 10 },
     header: { fontFamily: 'Inter-SemiBold', color: '#293869', fontSize: 20, marginBottom: 20 },
@@ -128,11 +125,10 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
     },
-    error: { fontFamily: 'Inter-Regular', color: 'red', marginBottom: 10 },
-    footer: { fontFamily: 'Inter-Regular', color: 'black', marginTop: 20, textAlign: 'center' },
+    error: { fontFamily: 'Inter-Regular', color: '#BF0E26', marginBottom: 10 },
+    footer: { fontFamily: 'Inter-Regular', color: '#293869', marginTop: 20, textAlign: 'center' },
     link: {
-        fontFamily: 'Inter-Regular',
-        fontWeight: 'bold',
+        fontFamily: 'Inter-Bold',
         color: '#4B6599',
     },
 });

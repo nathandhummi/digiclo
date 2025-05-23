@@ -10,8 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import OutfitsScreen from './screens/OutfitsScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import TabBar from './screens/TabBar';
 import CreateOutfit from './screens/createOutfit';
 
 const Tab = createBottomTabNavigator();
@@ -20,34 +22,18 @@ const Stack = createNativeStackNavigator();
 function MainApp() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Upload') {
-            iconName = focused ? 'cloud-upload' : 'cloud-upload-outline';
-          } else {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#000',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Upload" component={UploadScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Outfits" component={OutfitsScreen} />
     </Tab.Navigator>
   );
 }
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); //set state true temporarily to bypass login
 
   return (
     <NavigationContainer>
@@ -79,4 +65,3 @@ const App = () => {
 
 
 registerRootComponent(App);
-
