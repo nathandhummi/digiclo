@@ -24,7 +24,9 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
   return (
     <>
       <View style={styles.container}>
-        {state.routes.map((route, index) => {
+        {state.routes
+          .filter((route) => route.name !== 'CreateOutfit')
+          .map((route, index) => {
           const isFocused = state.index === index;
           const label = route.name;
 
