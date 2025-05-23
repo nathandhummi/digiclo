@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, Alert, Image, ScrollView, TouchableOpacity, Modal, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { BACKEND_URL } from '../config';
-import { useNavigation } from '@react-navigation/native';
 import { Trash2 } from 'lucide-react-native';
 
 

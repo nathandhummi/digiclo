@@ -28,6 +28,14 @@ function MainApp() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Upload" component={UploadScreen} />
       <Tab.Screen name="Outfits" component={OutfitsScreen} />
+      <Tab.Screen
+        name="CreateOutfit"
+        component={CreateOutfitScreen}
+        options={{
+          tabBarButton: () => null, // Hides from tab bar
+          headerShown: false,
+        }}
+      />
     </Tab.Navigator>
   );
 }
