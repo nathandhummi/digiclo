@@ -41,3 +41,4 @@ build/
 *.tsbuildinfo
 
 backend/.env
+venv/

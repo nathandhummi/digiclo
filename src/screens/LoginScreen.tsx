@@ -1,20 +1,26 @@
 import React, { useState, useEffect} from 'react';
-import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView, TouchableOpacity} from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator} from 'react-native';
 import * as Font from 'expo-font';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
-    Login: { setIsLoggedIn: (value: boolean) => void };
-    Signup: { setIsLoggedIn: (value: boolean) => void };
+    Login: undefined;
+    Signup: undefined;
     MainApp: undefined;
 };
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigation = useNavigation<LoginScreenNavigationProp>();
+    const { signIn } = useAuth();
 
     useEffect(() => {
         Font.loadAsync({
@@ -27,21 +33,21 @@ const LoginScreen = () => {
         .catch(err => console.warn('Font load error:', err));
     }, []);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigation = useNavigation<LoginScreenNavigationProp>();
-    const route = useRoute();
-    const { setIsLoggedIn } = route.params as RootStackParamList['Login'];
-
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (email === '' || password === '') {
-            setError('Incorrect email or password');
+            setError('Please fill in all fields');
             return;
         }
-        console.log('Logged in with:', email, password);
-        setError('');
-        setIsLoggedIn(true);
+
+        try {
+            setLoading(true);
+            setError('');
+            await signIn(email, password);
+        } catch (err: any) {
+            setError(err.message || 'Failed to sign in');
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
@@ -56,6 +62,7 @@ const LoginScreen = () => {
                     onChangeText={setEmail}
                     keyboardType='email-address'
                     style={styles.input}
+                    editable={!loading}
                 />
 
                 <TextInput
@@ -64,17 +71,26 @@ const LoginScreen = () => {
                     onChangeText={setPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!loading}
                 />
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Login</Text>
+                <TouchableOpacity 
+                    style={[styles.button, loading && styles.buttonDisabled]} 
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text style={styles.buttonText}>Login</Text>
+                    )}
                 </TouchableOpacity>
                 
                 <Text style={styles.footer}>
-                    Don’t have an account?{' '}
-                    <Text style={styles.link} onPress={() => navigation.navigate('Signup', { setIsLoggedIn })}>
+                    Don't have an account?{' '}
+                    <Text style={styles.link} onPress={() => navigation.navigate('Signup')}>
                         Sign up
                     </Text>
                 </Text>
@@ -119,6 +135,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
     },
     buttonText: {
         fontFamily: 'Inter-Bold',

@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes.js';
 import clothesRoutes from './routes/clothesRoutes.js';
 import outfitRoutes from './routes/outfitRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -16,8 +17,9 @@ const app = express();
 app.use(express.json({ limit: '20mb' })); // for parsing application/json
 app.use(cors());         // enable CORS for frontend-backend communication
 
-app.use('/api/upload', uploadRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/clothes', clothesRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/outfits', outfitRoutes);
 
 // Connect to MongoDB

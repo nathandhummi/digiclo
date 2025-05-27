@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as Font from 'expo-font';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
-    Login: { setIsLoggedIn: (value: boolean) => void };
-    Signup: { setIsLoggedIn: (value: boolean) => void };
+    Login: undefined;
+    Signup: undefined;
     MainApp: undefined;
 };
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 
 const SignupScreen = () => {
-
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigation = useNavigation<SignupScreenNavigationProp>();
+    const { signUp } = useAuth();
 
     useEffect(() => {
         Font.loadAsync({
@@ -24,18 +31,10 @@ const SignupScreen = () => {
             'Inter-SemiBold': require('../../assets/fonts/Inter-SemiBold.ttf'),
         })
         .then(() => setFontsLoaded(true))
-        .catch(err => console.warn('Font load error: ', err));
+        .catch(err => console.warn('Font load error:', err));
     }, []);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigation = useNavigation<SignupScreenNavigationProp>();
-    const route = useRoute();
-    const { setIsLoggedIn } = route.params as RootStackParamList['Signup'];
-    
-    const handleSignup = () => {
+    const handleSignup = async () => {
         if (email === '' || password === '' || confirmPassword === '') {
             setError('Please fill in all fields');
             return;
@@ -44,9 +43,16 @@ const SignupScreen = () => {
             setError('Passwords do not match');
             return;
         }
-        console.log('Signed up with:', email, password);
-        setError('');
-        setIsLoggedIn(true);
+
+        try {
+            setLoading(true);
+            setError('');
+            await signUp(email, password);
+        } catch (err: any) {
+            setError(err.message || 'Failed to sign up');
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
@@ -61,6 +67,7 @@ const SignupScreen = () => {
                     onChangeText={setEmail}
                     keyboardType='email-address'
                     style={styles.input}
+                    editable={!loading}
                 />
 
                 <TextInput
@@ -69,6 +76,7 @@ const SignupScreen = () => {
                     onChangeText={setPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!loading}
                 />
                 
                 <TextInput
@@ -77,16 +85,26 @@ const SignupScreen = () => {
                     onChangeText={setConfirmPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!loading}
                 />
+
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                <TouchableOpacity style={styles.button} onPress={handleSignup}>
-                    <Text style={styles.buttonText}>Sign Up</Text>
+                <TouchableOpacity 
+                    style={[styles.button, loading && styles.buttonDisabled]} 
+                    onPress={handleSignup}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text style={styles.buttonText}>Sign Up</Text>
+                    )}
                 </TouchableOpacity>
 
                 <Text style={styles.footer}>
                     Already have an account?{' '}
-                    <Text style={styles.link} onPress={() => navigation.navigate('Login', { setIsLoggedIn })}>
+                    <Text style={styles.link} onPress={() => navigation.navigate('Login')}>
                         Login
                     </Text>
                 </Text>
@@ -132,13 +150,16 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
+    buttonDisabled: {
+        opacity: 0.7,
+    },
     buttonText: {
         fontFamily: 'Inter-Bold',
         color: 'white',
         fontSize: 16,
     },
     error: { fontFamily: 'Inter-Regular', color: '#BF0E26', marginBottom: 10 },
-    footer: { fontFamily: 'Inter-Regular', color: '293869', marginTop: 20, textAlign: 'center' },
+    footer: { fontFamily: 'Inter-Regular', color: '#293869', marginTop: 20, textAlign: 'center' },
     link: {
         fontFamily: 'Inter-Bold',
         color: '#4B6599',
