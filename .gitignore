@@ -48,3 +48,5 @@ build/
 *.tsbuildinfo
 
 backend/.env
+
+config.ts
