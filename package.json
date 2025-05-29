@@ -2,6 +2,7 @@
   "name": "digiclo",
   "main": "src/App.tsx",
   "version": "1.0.0",
+  "type" : "module",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

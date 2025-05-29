@@ -3,7 +3,7 @@ import express from 'express';
 import Outfit from '../models/Outfit.js';
 import axios from 'axios';
 import Replicate from 'replicate';
-import openai from '../utils/openaiClient.js'; // don't forget the .js at the end
+import { openai } from '../utils/openaiClient.js'; // don't forget the .js at the end
 
 const router = express.Router();
 
