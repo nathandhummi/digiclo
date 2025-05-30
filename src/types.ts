@@ -8,4 +8,10 @@ export type RootStackParamList = {
   Shoes:   undefined;
   Outfits: undefined;
   CreateOutfit: undefined;
+  Item: {
+    id: string;
+    imageUrl: string;
+    isFavorite: boolean;
+    tags: string[];
+  };
 };
