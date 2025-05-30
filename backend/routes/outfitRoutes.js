@@ -28,14 +28,14 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { top, bottom, shoe, prompt, imageUrl } = req.body;
+  const { top, bottom, shoe} = req.body;
 
-  if (!top || !bottom || !shoe || !prompt || !imageUrl) {
+  if (!top || !bottom || !shoe ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    const newOutfit = new Outfit({ top, bottom, shoe, prompt, imageUrl });
+    const newOutfit = new Outfit({ top, bottom, shoe });
     await newOutfit.save();
 
     const populatedOutfit = await Outfit.findById(newOutfit._id)

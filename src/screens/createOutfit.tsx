@@ -49,61 +49,25 @@ const CreateOutfit: React.FC = () => {
     try {
       setLoading(true);
 
-      // Step 1: Save outfit (no prompt/imageUrl needed)
-      await axios.post(`${BACKEND_URL}/api/outfits`, {
+      const response = await axios.post(`${BACKEND_URL}/api/outfits`, {
         top: top._id,
         bottom: bottom._id,
         shoe: shoe._id,
       });
 
       Alert.alert('Outfit saved!');
+      console.log('Saved outfit:', response.data);
+
+      // Clear the selections if desired
+      setTop(null);
+      setBottom(null);
+      setShoe(null);
     } catch (err) {
       console.error('Error saving outfit:', err);
       Alert.alert('Failed to save outfit');
     } finally {
       setLoading(false);
     }
-  };
-
-  const renderClothingModal = (category: 'top' | 'bottom' | 'shoe') => {
-    const filteredItems = items.filter(item =>
-      typeof item.category === 'string' &&
-      item.category.toLowerCase().trim() === category
-    );
-    console.log("Modal opened for:", category);
-    console.log(items);
-    console.log("Filtered items:", filteredItems);
-    
-    return (
-      <Modal visible={categoryModal === category} animationType="slide">
-        <View style={{ flex: 1, padding: 16 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
-            Select a {category}
-          </Text>
-
-          <FlatList
-            data={items.filter(item => item.category === category)}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => {
-                  if (category === 'top') setTop(item);
-                  if (category === 'bottom') setBottom(item);
-                  if (category === 'shoe') setShoe(item);
-                  setCategoryModal(null);
-                }}
-                style={{ marginBottom: 12, borderBottomWidth: 1, paddingBottom: 8 }}
-              >
-                <Image source={{ uri: item.imageUrl }} style={{ width: 100, height: 100 }} />
-                <Text>{item.label}</Text>
-              </TouchableOpacity>
-            )}
-          />
-
-          <Button title="Close" onPress={() => setCategoryModal(null)} />
-        </View>
-      </Modal>
-    )
   };
 
 
