@@ -1,4 +1,3 @@
-// App.tsx
 import 'react-native-url-polyfill/auto';
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -78,7 +77,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 }
+  flex: { flex: 1 },
 });
 
 registerRootComponent(App);

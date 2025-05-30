@@ -1,31 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+} from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-
 import * as ImagePicker from 'expo-image-picker';
-
+import { Ionicons } from '@expo/vector-icons';
+import TagsInput from '../components/TagsInput';
 import { BACKEND_URL } from '../config';
 
-const labelToCategory: Record<string, string> = {
-  'T-Shirt': 'top',
-  'Hoodie': 'top',
-  'Sweater': 'top',
-  'Jeans': 'bottom',
-  'Shorts': 'bottom',
-  'Skirt': 'bottom',
-  'Sneakers': 'shoe',
-  'Boots': 'shoe',
-  'Heels': 'shoe',
-  'Hat': 'accessory',
-  'Bag': 'accessory',
-};
+type CategoryOption = { label: string; value: string };
 
-export default function UploadScreen() {
+const CATEGORIES: CategoryOption[] = [
+  { label: 'Top',    value: 'top' },
+  { label: 'Bottom', value: 'bottom' },
+  { label: 'Shoe',   value: 'shoe' },
+];
+
+const UploadScreen: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
-  const [label, setLabel] = useState('');
-  const [uploading, setUploading] = useState(false);
-
+  const [category, setCategory] = useState<string>('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -34,68 +35,55 @@ export default function UploadScreen() {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       base64: true,
     });
 
-    if (!result.canceled) {
-      const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      setImage(base64);
+    if (!res.canceled && res.assets.length > 0) {
+      setImage(`data:image/jpeg;base64,${res.assets[0].base64}`);
     }
   };
 
-  const uploadImage = async () => {
+  const uploadImage = async (): Promise<string | null> => {
     if (!image) return null;
-
     try {
       const res = await fetch(`${BACKEND_URL}/api/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image }),
       });
-
       const data = await res.json();
-      console.log('Upload response:', data);
-      return data.url;
-    } catch (error) {
-      console.error('Image upload failed:', error);
+      return data.url as string;
+    } catch {
       return null;
     }
   };
 
   const saveClothingItem = async () => {
-    if (uploading) return; // prevent double-tap
-    setUploading(true);
+    if (uploading) return;
+    if (!category) {
+      alert('Please select a category.');
+      return;
+    }
 
+    setUploading(true);
     try {
       const imageUrl = await uploadImage();
-      if (!imageUrl) {
-        alert('Image upload failed');
-        return;
-      }
+      if (!imageUrl) throw new Error('Image upload failed');
 
-      const category = labelToCategory[label];
-      if (!label || !category) {
-        alert('Please select a valid label.');
-        return;
-      }
-
-      const clothingItem = { label, category, imageUrl };
-
-      const res = await fetch(`${BACKEND_URL}/api/clothes`, {
+      await fetch(`${BACKEND_URL}/api/clothes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clothingItem),
+        body: JSON.stringify({ category, imageUrl, tags }),
       });
 
-      const data = await res.json();
-      console.log('Saved clothing item:', data);
       alert('Upload complete!');
       setImage(null);
-      setLabel('');
-    } catch(error) {
-      console.error('Upload error:', error);
+      setCategory('');
+      setTags([]);
+    } catch (err) {
+      console.error(err);
       alert('Upload failed. Please try again.');
     } finally {
       setUploading(false);
@@ -103,150 +91,112 @@ export default function UploadScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text style={styles.title}>Upload</Text>
-        <View style={styles.topHalf}>
-          <TouchableOpacity style={image ? styles.imageBoxLarge : styles.uploadButton} onPress={pickImage}>
-            {image ? (
-              <Image source={{ uri : image }} style={styles.imagePreview} />
-            ) : (
-              <Text style={styles.uploadButtonText}>+</Text>
-            )}
-          </TouchableOpacity>
-        </View>
 
-        <View style={styles.bottomHalf}>
-          <Text style={styles.label}>Category</Text>
-          <Dropdown 
-            style={{ marginVertical: 10, ...styles.dropdown }}
-            data={Object.keys(labelToCategory).map((item) => ({
-              label: item,
-              value: item,
-            }))}
-            labelField="label"
-            valueField="value"
-            placeholder="Select Category..."
-            value={label}
-            onChange={(item) => setLabel(item.value)}
-          />
+        <TouchableOpacity
+          style={image ? styles.imageBoxLarge : styles.uploadButton}
+          onPress={pickImage}
+        >
+          {image ? (
+            <Image source={{ uri: image }} style={styles.imagePreview} />
+          ) : (
+            <Text style={styles.uploadButtonText}>+</Text>
+          )}
+        </TouchableOpacity>
 
-          <TouchableOpacity onPress={saveClothingItem} disabled={uploading} style={[ styles.uploadButtonFullWidth, uploading && { backgroundColor: '#ccc' }, ]}>
-            <Text style={styles.buttonText}>
-              {uploading ? 'Uploading...' : 'Upload'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.label}>Category</Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={CATEGORIES}
+          labelField="label"
+          valueField="value"
+          placeholder="Select category..."
+          value={category}
+          onChange={item => setCategory(item.value)}
+        />
+
+        <Text style={styles.label}>Tags</Text>
+        <TagsInput tags={tags} onChangeTags={setTags} />
+
+        <TouchableOpacity
+          onPress={saveClothingItem}
+          disabled={uploading}
+          style={[
+            styles.uploadButtonFullWidth,
+            uploading && { backgroundColor: '#ccc' },
+          ]}
+        >
+          <Text style={styles.buttonText}>
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   title: {
-    fontFamily: 'Inter-Bold',
     fontSize: 24,
-    padding: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 24,
   },
-
+  uploadButton: {
+    backgroundColor: '#172251',
+    width: 160,
+    height: 160,
+    borderRadius: 10,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  imageBoxLarge: {
+    width: 270,
+    height: 270,
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
+  uploadButtonText: {
+    fontSize: 30,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+  },
+  label: {
+    fontWeight: '600',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  dropdown: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
   uploadButtonFullWidth: {
     height: 44,
     borderRadius: 4,
     backgroundColor: '#172251',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 16,
+    marginTop: 8,
   },
-
-  // button: {
-  //   backgroundColor: '#172251',
-  //   paddingVertical: 12,
-  //   paddingHorizontal: 20,
-  //   borderRadius: 5,
-  //   alignItems: 'center',
-
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.25,
-  //   shadowRadius: 3.84,
-  //   elevation: 5,
-  // },
-
   buttonText: {
-    fontFamily: 'Inter-Regular',
     color: 'white',
     fontSize: 16,
-    textAlign: 'center',
+    fontWeight: '600',
   },
-
-  uploadButton: {
-    backgroundColor: '#172251',
-    width: 160,
-    height: 160,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-  },
-
-  imageBoxLarge: {
-    width: 270,
-    height: 270,
-  },
-
-  uploadButtonText: {
-    fontFamily: 'Inter-Bold',
-    color: 'white',
-    fontSize: 30,
-    textAlign: 'center',
-  },
-    
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
-    resizeMode: 'cover',
-  },
-
-  // input: {
-  //   height: 44,
-  //   borderWidth: 1,
-  //   borderColor: '#000',
-  //   paddingHorizontal: 10,
-  //   borderRadius: 4,
-  //   fontSize: 16,
-  //   backgroundColor: '#fff',
-  //   marginBottom: 16,
-  // },
-
-  topHalf: {
-    marginTop: 24,
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-
-  bottomHalf: {
-    marginTop: 20,
-    paddingHorizontal: 24,
-  },
-
-  label: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 14,
-    marginBottom: 4,
-    color: '#000',
-  },
-
-  dropdown: {
-    height: 44,
-    borderColor: '#000',
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-
 });
+
+export default UploadScreen;
