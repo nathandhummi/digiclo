@@ -1,9 +1,10 @@
 import 'react-native-url-polyfill/auto';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeScreen         from './screens/HomeScreen';
 import UploadScreen       from './screens/UploadScreen';
@@ -44,7 +45,32 @@ function withTabBar<T extends {}>(Screen: React.ComponentType<T>) {
 }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for existing authentication
+    const checkAuth = async () => {
+      try {
+        // Commented out for testing
+        // const token = await AsyncStorage.getItem('token');
+        // const user = await AsyncStorage.getItem('user');
+        // if (token && user) {
+        //   setIsLoggedIn(true);
+        // }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (isLoading) {
+    return null; // Or a loading screen if you prefer
+  }
 
   return (
     <NavigationContainer>

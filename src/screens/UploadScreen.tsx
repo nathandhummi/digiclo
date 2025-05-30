@@ -13,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import TagsInput from '../components/TagsInput';
 import { BACKEND_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type CategoryOption = { label: string; value: string };
 
@@ -69,12 +70,20 @@ const UploadScreen: React.FC = () => {
 
     setUploading(true);
     try {
+      const token = await AsyncStorage.getItem('token'); // 🔑 get token
+      if (!token) {
+        alert('User not authenticated');
+        return;
+      }
+
       const imageUrl = await uploadImage();
       if (!imageUrl) throw new Error('Image upload failed');
 
       await fetch(`${BACKEND_URL}/api/clothes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+                 Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ category, imageUrl, tags }),
       });
 

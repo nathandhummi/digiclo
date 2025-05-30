@@ -2,7 +2,7 @@
   "name": "digiclo",
   "main": "src/App.tsx",
   "version": "1.0.0",
-  "type" : "module",
+  "type": "module",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
     "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/bottom-tabs": "^7.3.12",
     "@react-navigation/native": "^7.1.8",
@@ -23,6 +24,7 @@
     "expo-image-picker": "~16.1.4",
     "expo-status-bar": "~2.2.3",
     "firebase": "^11.7.3",
+    "lucide-react-native": "^0.511.0",
     "mongodb": "^6.16.0",
     "ngrok": "^5.0.0-beta.2",
     "openai": "^4.100.0",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -11,9 +11,10 @@ import {
   ViewStyle
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ClothesRoute = 'Outfits' | 'Tops' | 'Bottoms' | 'Shoes';
 
@@ -32,19 +33,35 @@ export default function HomeScreen() {
     justifyContent: 'flex-start',
   };
 
+  const fetchClothing = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Token not found');
+
+      const res = await fetch('http://localhost:4000/api/clothes', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      const data = await res.json();
+      setClothingItems(data);
+    } catch (err) {
+      console.error('Failed to fetch:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('http://localhost:4000/api/clothes');
-        const data = await res.json();
-        setClothingItems(data);
-      } catch (err) {
-        console.error('Failed to fetch:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchClothing();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchClothing();
+    }, [])
+  );
 
   const handleItemPress = (itemId: string) => {
     console.log('Selected:', itemId);

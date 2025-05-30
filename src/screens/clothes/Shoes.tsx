@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Shoes'>;
 
@@ -26,32 +27,45 @@ export default function Shoes() {
   const [sortKey, setSortKey] = useState<'newest' | 'price'>('newest');
   const [items, setItems] = useState<any[]>([]);
 
-  const fetchItems = async () => {
-    try {
-      const res = await fetch('http://localhost:4000/api/clothes');
-      const data: any[] = await res.json();
-      setItems(data.filter(item => item.category === 'shoe'));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  // Fetch & filter shoes on focus
   useFocusEffect(
     useCallback(() => {
-      fetchItems();
+      const fetchShoes = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (!token) throw new Error('Token not found');
+
+          const res = await fetch('http://localhost:4000/api/clothes', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data: any[] = await res.json();
+          setItems(data.filter(item => item.category === 'shoe'));
+        } catch (err) {
+          console.error('Failed to fetch shoes:', err);
+        }
+      };
+
+      fetchShoes();
     }, [])
   );
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.tabGroup}>
-        {['all', 'favorites'].map(mode => (
+        {(['all', 'favorites'] as const).map(mode => (
           <TouchableOpacity
             key={mode}
             style={[styles.tab, viewMode === mode && styles.tabActive]}
-            onPress={() => setViewMode(mode as 'all' | 'favorites')}
+            onPress={() => setViewMode(mode)}
           >
-            <Text style={[styles.tabText, viewMode === mode && styles.tabTextActive]}>
+            <Text
+              style={[
+                styles.tabText,
+                viewMode === mode && styles.tabTextActive,
+              ]}
+            >
               {mode === 'all' ? 'SHOES' : 'FAVORITES'}
             </Text>
           </TouchableOpacity>
@@ -69,16 +83,15 @@ export default function Shoes() {
           </Text>
           <Ionicons name="chevron-down" size={16} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => {/* filter modal */}}>
+        <TouchableOpacity onPress={() => {/* open filter modal */}}>
           <Ionicons name="filter" size={20} color="#000" />
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const filtered = viewMode === 'favorites'
-    ? items.filter(i => i.isFavorite)
-    : items;
+  const filtered =
+    viewMode === 'favorites' ? items.filter(i => i.isFavorite) : items;
 
   const sorted = [...filtered].sort((a, b) =>
     sortKey === 'newest'
@@ -143,7 +156,6 @@ const styles = StyleSheet.create({
   tabActive: { borderColor: '#000' },
   tabText: { fontSize: 14, color: 'gray' },
   tabTextActive: { color: '#000', fontWeight: '600' },
-
   controls: { flexDirection: 'row', alignItems: 'center' },
   sortButton: {
     flexDirection: 'row',
@@ -156,7 +168,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   sortText: { fontSize: 12, marginRight: 4, color: '#000' },
-
   list: { paddingHorizontal: 16, paddingTop: 8 },
   card: {
     width: ITEM_SIZE,
@@ -167,7 +178,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   image: { width: '100%', height: '100%' },
-
   heartOverlay: {
     position: 'absolute',
     top: 6,
