@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as Font from 'expo-font';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import axios, { AxiosError } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { BACKEND_URL } from '../config';
 
 type RootStackParamList = {
     Login: { setIsLoggedIn: (value: boolean) => void };
@@ -12,10 +16,22 @@ type RootStackParamList = {
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 
+interface ErrorResponse {
+    message?: string;
+    error?: string;
+}
+
 const SignupScreen = () => {
-
     const [fontsLoaded, setFontsLoaded] = useState(false);
-
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigation = useNavigation<SignupScreenNavigationProp>();
+    const route = useRoute();
+    const { setIsLoggedIn } = route.params as RootStackParamList['Signup'];
+    
     useEffect(() => {
         Font.loadAsync({
             'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
@@ -27,15 +43,7 @@ const SignupScreen = () => {
         .catch(err => console.warn('Font load error: ', err));
     }, []);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigation = useNavigation<SignupScreenNavigationProp>();
-    const route = useRoute();
-    const { setIsLoggedIn } = route.params as RootStackParamList['Signup'];
-    
-    const handleSignup = () => {
+    const handleSignup = async () => {
         if (email === '' || password === '' || confirmPassword === '') {
             setError('Please fill in all fields');
             return;
@@ -44,9 +52,51 @@ const SignupScreen = () => {
             setError('Passwords do not match');
             return;
         }
-        console.log('Signed up with:', email, password);
+
+        setIsLoading(true);
         setError('');
-        setIsLoggedIn(true);
+
+        try {
+            const response = await axios.post(`${BACKEND_URL}/api/auth/signup`, {
+                email,
+                password
+            });
+
+            const { token, user } = response.data;
+            
+            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('user', JSON.stringify(user));
+            
+            setIsLoggedIn(true);
+        } catch (err) {
+            const error = err as AxiosError<ErrorResponse>;
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                const errorMessage = error.response.data?.message || error.response.data?.error || 'Unknown error';
+                setError(`Server error: ${errorMessage}`);
+                console.error('Server response:', error.response.data);
+            } else if (error.request) {
+                // The request was made but no response was received
+                setError('No response from server. Please check your internet connection and server status.');
+                console.error('No response received:', error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                setError(`Request error: ${error.message}`);
+                console.error('Request setup error:', error.message);
+            }
+            console.error('Full error details:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    if (!fontsLoaded) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#172251" />
+            </View>
+        );
     }
 
     return (
@@ -61,6 +111,7 @@ const SignupScreen = () => {
                     onChangeText={setEmail}
                     keyboardType='email-address'
                     style={styles.input}
+                    editable={!isLoading}
                 />
 
                 <TextInput
@@ -69,6 +120,7 @@ const SignupScreen = () => {
                     onChangeText={setPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!isLoading}
                 />
                 
                 <TextInput
@@ -77,11 +129,20 @@ const SignupScreen = () => {
                     onChangeText={setConfirmPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!isLoading}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                <TouchableOpacity style={styles.button} onPress={handleSignup}>
-                    <Text style={styles.buttonText}>Sign Up</Text>
+                <TouchableOpacity 
+                    style={[styles.button, isLoading && styles.buttonDisabled]} 
+                    onPress={handleSignup}
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text style={styles.buttonText}>Sign Up</Text>
+                    )}
                 </TouchableOpacity>
 
                 <Text style={styles.footer}>
@@ -98,6 +159,12 @@ const SignupScreen = () => {
 export default SignupScreen;
 
 const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white'
+    },
     title: { fontFamily: 'Inter-Bold', fontSize: 32, color: '#172251', textAlign: 'center', marginBottom: 20 },
     container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'white'},
     form: { backgroundColor: 'white', padding: 20, borderRadius: 10 },
@@ -132,13 +199,16 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
+    buttonDisabled: {
+        opacity: 0.7,
+    },
     buttonText: {
         fontFamily: 'Inter-Bold',
         color: 'white',
         fontSize: 16,
     },
     error: { fontFamily: 'Inter-Regular', color: '#BF0E26', marginBottom: 10 },
-    footer: { fontFamily: 'Inter-Regular', color: '293869', marginTop: 20, textAlign: 'center' },
+    footer: { fontFamily: 'Inter-Regular', color: '#293869', marginTop: 20, textAlign: 'center' },
     link: {
         fontFamily: 'Inter-Bold',
         color: '#4B6599',
