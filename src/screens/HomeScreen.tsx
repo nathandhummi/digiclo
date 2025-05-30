@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
+  ViewStyle
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Dimensions } from 'react-native';
-import { ViewStyle } from 'react-native';
-
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types'; // Adjust path if needed
-import { Button } from 'react-native'; // Add Button import
+import { RootStackParamList } from '../types';
+
+type ClothesRoute = 'Outfits' | 'Tops' | 'Bottoms' | 'Shoes';
 
 export default function HomeScreen() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const screenHeight = Dimensions.get('window').height;
   const usableHeight = screenHeight - 80; // approx height of tab bar
@@ -19,36 +29,38 @@ export default function HomeScreen() {
     height: usableHeight / 3,
     paddingHorizontal: 16,
     paddingTop: 8,
-    justifyContent: 'flex-start', 
+    justifyContent: 'flex-start',
   };
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    const fetchClothing = async () => {
+    (async () => {
       try {
         const res = await fetch('http://localhost:4000/api/clothes');
         const data = await res.json();
-        console.log('Fetched:', data);
         setClothingItems(data);
       } catch (err) {
         console.error('Failed to fetch:', err);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchClothing();
+    })();
   }, []);
 
   const handleItemPress = (itemId: string) => {
     console.log('Selected:', itemId);
   };
 
-  const renderSection = (label: string, items: any[]) => (
+  const renderSection = (
+    label: string,
+    items: any[],
+    routeName: ClothesRoute
+  ) => (
     <View style={[styles.section, sectionStyle]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionLabel}>{label}:</Text>
-        <Ionicons name="arrow-forward" size={18} color="gray" />
+        <Text style={styles.sectionLabel}>{label}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate(routeName)}>
+          <Ionicons name="arrow-forward" size={18} color="gray" />
+        </TouchableOpacity>
       </View>
       {items.length === 0 ? (
         <Text style={styles.emptyText}>No {label.toLowerCase()} yet</Text>
@@ -72,24 +84,32 @@ export default function HomeScreen() {
     </View>
   );
 
-  const outfits = clothingItems.filter(item => item.type === 'outfit');
-  const tops = clothingItems.filter(item => item.category === 'top');
-  const bottoms = clothingItems.filter(item => item.category === 'bottom');
-  const shoes = clothingItems.filter(item => item.category === 'shoe');
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const outfits = clothingItems.filter((i) => i.type === 'outfit');
+  const tops    = clothingItems.filter((i) => i.category === 'top');
+  const bottoms = clothingItems.filter((i) => i.category === 'bottom');
+  const shoes   = clothingItems.filter((i) => i.category === 'shoe');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-    {renderSection('OUTFITS', outfits)}
-    <View style={styles.divider} />
+      {renderSection('Outfits', outfits, 'Outfits')}
+      <View style={styles.divider} />
 
-    {renderSection('TOPS', tops)}
-    <View style={styles.divider} />
+      {renderSection('Tops', tops, 'Tops')}
+      <View style={styles.divider} />
 
-    {renderSection('BOTTOMS', bottoms)}
-    <View style={styles.divider} />
+      {renderSection('Bottoms', bottoms, 'Bottoms')}
+      <View style={styles.divider} />
 
-    {renderSection('SHOES', shoes)}
-  </ScrollView>
+      {renderSection('Shoes', shoes, 'Shoes')}
+    </ScrollView>
   );
 }
 
@@ -100,6 +120,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingVertical: 16,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
     width: '100%',
