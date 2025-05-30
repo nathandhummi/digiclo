@@ -1,8 +1,10 @@
 import React, { useState, useEffect} from 'react';
-import { View, Text, TextInput, Button, StyleSheet, KeyboardAvoidingView, TouchableOpacity} from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator} from 'react-native';
 import * as Font from 'expo-font';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RootStackParamList = {
     Login: { setIsLoggedIn: (value: boolean) => void };
@@ -13,8 +15,14 @@ type RootStackParamList = {
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigation = useNavigation<LoginScreenNavigationProp>();
+    const route = useRoute();
+    const { setIsLoggedIn } = route.params as RootStackParamList['Login'];
 
     useEffect(() => {
         Font.loadAsync({
@@ -27,21 +35,42 @@ const LoginScreen = () => {
         .catch(err => console.warn('Font load error:', err));
     }, []);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigation = useNavigation<LoginScreenNavigationProp>();
-    const route = useRoute();
-    const { setIsLoggedIn } = route.params as RootStackParamList['Login'];
-
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (email === '' || password === '') {
-            setError('Incorrect email or password');
+            setError('Please enter both email and password');
             return;
         }
-        console.log('Logged in with:', email, password);
+
+        setIsLoading(true);
         setError('');
-        setIsLoggedIn(true);
+
+        try {
+            const response = await axios.post('http://localhost:4000/api/auth/login', {
+                email,
+                password
+            });
+
+            const { token, user } = response.data;
+            
+            // Store the token and user data
+            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('user', JSON.stringify(user));
+            
+            setIsLoggedIn(true);
+        } catch (err) {
+            setError('Invalid email or password');
+            console.error('Login error:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    if (!fontsLoaded) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#172251" />
+            </View>
+        );
     }
 
     return (
@@ -56,6 +85,7 @@ const LoginScreen = () => {
                     onChangeText={setEmail}
                     keyboardType='email-address'
                     style={styles.input}
+                    editable={!isLoading}
                 />
 
                 <TextInput
@@ -64,16 +94,25 @@ const LoginScreen = () => {
                     onChangeText={setPassword}
                     secureTextEntry
                     style={styles.input}
+                    editable={!isLoading}
                 />
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Login</Text>
+                <TouchableOpacity 
+                    style={[styles.button, isLoading && styles.buttonDisabled]} 
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text style={styles.buttonText}>Login</Text>
+                    )}
                 </TouchableOpacity>
                 
                 <Text style={styles.footer}>
-                    Don’t have an account?{' '}
+                    Don't have an account?{' '}
                     <Text style={styles.link} onPress={() => navigation.navigate('Signup', { setIsLoggedIn })}>
                         Sign up
                     </Text>
@@ -86,6 +125,12 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white'
+    },
     title: { fontFamily: 'Inter-Bold', fontSize: 32, color: '#172251', textAlign: 'center', marginBottom: 20 },
     container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'white'},
     form: { backgroundColor: 'white', padding: 20, borderRadius: 10 },
@@ -119,6 +164,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
     },
     buttonText: {
         fontFamily: 'Inter-Bold',
