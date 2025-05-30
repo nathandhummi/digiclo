@@ -1,9 +1,10 @@
 import express from 'express';
 import ClothingItem from '../models/ClothingItem.js';
+import authenticateUser from '../middleware/authenticateUser.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateUser, async (req, res) => {
   try {
     const { label, category, imageUrl } = req.body;
 
@@ -12,7 +13,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Label, category, and imageUrl are required' });
     }
 
-    const newItem = new ClothingItem({ label, category, imageUrl });
+    const newItem = new ClothingItem({ label, category, imageUrl, userId: req.user._id });
     await newItem.save();
 
     res.status(201).json(newItem);
@@ -22,9 +23,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateUser, async (req, res) => {
   try {
-    const items = await ClothingItem.find();
+    const items = await ClothingItem.find({ userId: req.user._id });
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch items' });

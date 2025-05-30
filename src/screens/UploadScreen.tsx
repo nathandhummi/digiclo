@@ -6,6 +6,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 
 import { BACKEND_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const labelToCategory: Record<string, string> = {
   'T-Shirt': 'top',
@@ -69,6 +70,12 @@ export default function UploadScreen() {
     setUploading(true);
 
     try {
+      const token = await AsyncStorage.getItem('token'); // 🔑 get token
+      if (!token) {
+        alert('User not authenticated');
+        return;
+      }
+
       const imageUrl = await uploadImage();
       if (!imageUrl) {
         alert('Image upload failed');
@@ -85,7 +92,10 @@ export default function UploadScreen() {
 
       const res = await fetch(`${BACKEND_URL}/api/clothes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(clothingItem),
       });
 

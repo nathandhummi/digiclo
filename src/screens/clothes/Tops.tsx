@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Tops'>;
 
@@ -27,13 +28,26 @@ export default function Tops() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/clothes')
-      .then(r => r.json())
-      .then((data: any[]) => {
-        const topsOnly = data.filter(item => item.category === 'top');
+    const fetchTops = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) throw new Error('Token not found');
+
+        const res = await fetch('http://localhost:4000/api/clothes', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        const topsOnly = data.filter((item: { category: string }) => item.category === 'top');
         setItems(topsOnly);
-      })
-      .catch(console.error);
+      } catch (err) {
+        console.error('Failed to fetch tops:', err);
+      }
+    };
+
+    fetchTops();
   }, []);
 
   const renderHeader = () => (

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Shoes'>;
 
@@ -26,13 +27,26 @@ export default function Shoes() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/clothes')
-      .then(r => r.json())
-      .then((data: any[]) => {
-        const shoesOnly = data.filter(item => item.category === 'shoe');
+    const fetchShoes = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) throw new Error('Token not found');
+
+        const res = await fetch('http://localhost:4000/api/clothes', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        const shoesOnly = data.filter((item: { category: string }) => item.category === 'shoe');
         setItems(shoesOnly);
-      })
-      .catch(console.error);
+      } catch (err) {
+        console.error('Failed to fetch shoes:', err);
+      }
+    };
+
+    fetchShoes();
   }, []);
 
   const renderHeader = () => (
