@@ -1,5 +1,5 @@
 // src/screens/clothes/Tops.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,7 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Tops'>;
 
 const { width } = Dimensions.get('window');
-const ITEM_SIZE = (width - 32 - 16) / 3; // 32 = horizontal padding, 16 = space between items
+const ITEM_SIZE = (width - 32 - 16) / 3;
 
 export default function Tops() {
   const navigation = useNavigation<NavProp>();
@@ -27,50 +27,50 @@ export default function Tops() {
   const [sortKey, setSortKey] = useState<'newest' | 'price'>('newest');
   const [items, setItems] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchTops = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) throw new Error('Token not found');
+  // Fetch & filter tops on focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTops = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (!token) throw new Error('Token not found');
 
-        const res = await fetch('http://localhost:4000/api/clothes', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+          const res = await fetch('http://localhost:4000/api/clothes', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data: any[] = await res.json();
+          setItems(data.filter(item => item.category === 'top'));
+        } catch (err) {
+          console.error('Failed to fetch tops:', err);
+        }
+      };
 
-        const data = await res.json();
-        const topsOnly = data.filter((item: { category: string }) => item.category === 'top');
-        setItems(topsOnly);
-      } catch (err) {
-        console.error('Failed to fetch tops:', err);
-      }
-    };
-
-    fetchTops();
-  }, []);
+      fetchTops();
+    }, [])
+  );
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.tabGroup}>
-        <TouchableOpacity
-          style={[styles.tab, viewMode === 'all' && styles.tabActive]}
-          onPress={() => setViewMode('all')}
-        >
-          <Text style={[styles.tabText, viewMode === 'all' && styles.tabTextActive]}>
-            SHIRTS
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, viewMode === 'favorites' && styles.tabActive]}
-          onPress={() => setViewMode('favorites')}
-        >
-          <Text style={[styles.tabText, viewMode === 'favorites' && styles.tabTextActive]}>
-            FAVORITES
-          </Text>
-        </TouchableOpacity>
+        {(['all', 'favorites'] as const).map(mode => (
+          <TouchableOpacity
+            key={mode}
+            style={[styles.tab, viewMode === mode && styles.tabActive]}
+            onPress={() => setViewMode(mode)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                viewMode === mode && styles.tabTextActive,
+              ]}
+            >
+              {mode === 'all' ? 'TOPS' : 'FAVORITES'}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
       <View style={styles.controls}>
         <TouchableOpacity
           style={styles.sortButton}
@@ -83,7 +83,6 @@ export default function Tops() {
           </Text>
           <Ionicons name="chevron-down" size={16} color="#000" />
         </TouchableOpacity>
-
         <TouchableOpacity onPress={() => {/* open filter modal */}}>
           <Ionicons name="filter" size={20} color="#000" />
         </TouchableOpacity>
@@ -92,9 +91,7 @@ export default function Tops() {
   );
 
   const filtered =
-    viewMode === 'favorites'
-      ? items.filter(i => i.isFavorite)
-      : items;
+    viewMode === 'favorites' ? items.filter(i => i.isFavorite) : items;
 
   const sorted = [...filtered].sort((a, b) =>
     sortKey === 'newest'
@@ -105,7 +102,6 @@ export default function Tops() {
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-
       <FlatList
         data={sorted}
         keyExtractor={i => i._id}
@@ -115,13 +111,25 @@ export default function Tops() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.goBack()}
+            onPress={() =>
+              navigation.navigate('Item', {
+                id: item._id,
+                imageUrl: item.imageUrl,
+                isFavorite: item.isFavorite,
+                tags: item.tags,
+              })
+            }
           >
             <Image
               source={{ uri: item.imageUrl }}
               style={styles.image}
               resizeMode="cover"
             />
+            {item.isFavorite && (
+              <View style={styles.heartOverlay}>
+                <Ionicons name="heart" size={20} color="red" />
+              </View>
+            )}
           </TouchableOpacity>
         )}
       />
@@ -131,7 +139,6 @@ export default function Tops() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -139,32 +146,17 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
-  tabGroup: {
-    flexDirection: 'row',
-    flex: 1,
-  },
+  tabGroup: { flexDirection: 'row', flex: 1 },
   tab: {
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderBottomWidth: 2,
     borderColor: 'transparent',
   },
-  tabActive: {
-    borderColor: '#000',
-  },
-  tabText: {
-    fontSize: 14,
-    color: 'gray',
-  },
-  tabTextActive: {
-    color: '#000',
-    fontWeight: '600',
-  },
-
-  controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  tabActive: { borderColor: '#000' },
+  tabText: { fontSize: 14, color: 'gray' },
+  tabTextActive: { color: '#000', fontWeight: '600' },
+  controls: { flexDirection: 'row', alignItems: 'center' },
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -175,16 +167,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 4,
   },
-  sortText: {
-    fontSize: 12,
-    marginRight: 4,
-    color: '#000',
-  },
-
-  list: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
+  sortText: { fontSize: 12, marginRight: 4, color: '#000' },
+  list: { paddingHorizontal: 16, paddingTop: 8 },
   card: {
     width: ITEM_SIZE,
     height: ITEM_SIZE + 20,
@@ -193,8 +177,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
   },
-  image: {
-    width: '100%',
-    height: '100%',
+  image: { width: '100%', height: '100%' },
+  heartOverlay: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 10,
+    padding: 2,
   },
 });

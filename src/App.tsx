@@ -1,4 +1,3 @@
-// App.tsx
 import 'react-native-url-polyfill/auto';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -14,6 +13,7 @@ import CreateOutfitScreen from './screens/createOutfit';
 import Tops               from './screens/clothes/Tops';
 import Bottoms            from './screens/clothes/Bottoms';
 import Shoes              from './screens/clothes/Shoes';
+import ItemDetail         from './screens/clothes/ItemDetail';
 
 import LoginScreen  from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -27,6 +27,7 @@ export type RootStackParamList = {
   Outfits:      undefined;
   CreateOutfit: undefined;
   Tops:         undefined;
+  Item:         { id: string; imageUrl: string; isFavorite: boolean; tags: string[] };
   Bottoms:      undefined;
   Shoes:        undefined;
 };
@@ -94,6 +95,7 @@ export default function App() {
             <Stack.Screen name="Outfits"      component={withTabBar(OutfitsScreen)} />
             <Stack.Screen name="CreateOutfit" component={withTabBar(CreateOutfitScreen)} />
             <Stack.Screen name="Tops"         component={withTabBar(Tops)} />
+            <Stack.Screen name="Item"         component={withTabBar(ItemDetail)} />
             <Stack.Screen name="Bottoms"      component={withTabBar(Bottoms)} />
             <Stack.Screen name="Shoes"        component={withTabBar(Shoes)} />
           </>
@@ -104,7 +106,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 }
+  flex: { flex: 1 },
 });
 
 registerRootComponent(App);
