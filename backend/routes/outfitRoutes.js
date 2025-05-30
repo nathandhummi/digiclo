@@ -1,6 +1,7 @@
 // routes/outfits.ts or outfits.routes.ts
 import express from 'express';
 import Outfit from '../models/Outfit.js';
+import authenticateUser from '../middleware/authenticateUser.js';
 //import Replicate from 'replicate';
 
 const router = express.Router();
@@ -11,14 +12,14 @@ const replicate = new Replicate({
 });
 */
 
-// GET /outfits - get all outfits
-router.get('/', async (req, res) => {
+// GET /outfits - get all outfits for the logged-in user
+router.get('/', authenticateUser, async (req, res) => {
   try {
-    const outfits = await Outfit.find()
+    const outfits = await Outfit.find({ userId: req.user._id })
       .populate('top')
       .populate('bottom')
       .populate('shoe')
-      .sort({ createdAt: -1 }); // Optional: newest first
+      .sort('-createdAt');
 
     res.json(outfits);
   } catch (err) {
@@ -27,23 +28,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
-  const { top, bottom, shoe} = req.body;
+
+router.post('/', authenticateUser, async (req, res) => {
+  const { top, bottom, shoe } = req.body;
 
   console.log("🛠️ Received POST /api/outfits with:", { top, bottom, shoe });
 
-  if (!top || !bottom || !shoe ) {
+  if (!top || !bottom || !shoe) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    const newOutfit = new Outfit({ top, bottom, shoe });
+    const newOutfit = new Outfit({
+      top,
+      bottom,
+      shoe,
+      userId: req.user._id, // ✅ associate with the logged-in user
+    });
+
     await newOutfit.save();
 
     const populatedOutfit = await Outfit.findById(newOutfit._id)
-        .populate('top')
-        .populate('bottom')
-        .populate('shoe');
+      .populate('top')
+      .populate('bottom')
+      .populate('shoe');
 
     console.log("✅ Outfit saved:", populatedOutfit);
     res.status(201).json(populatedOutfit);

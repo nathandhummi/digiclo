@@ -16,6 +16,11 @@ const outfitSchema = new mongoose.Schema({
     ref: 'ClothingItem',
     required: true,
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 }, { timestamps: true });
 
 const Outfit = mongoose.model('Outfit', outfitSchema);

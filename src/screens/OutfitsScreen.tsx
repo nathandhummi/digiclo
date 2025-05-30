@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { BACKEND_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ClothingItem = {
   _id: string;
@@ -23,7 +24,14 @@ export default function OutfitsScreen() {
   useEffect(() => {
     const fetchOutfits = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/outfits`);
+        const token = await AsyncStorage.getItem('token'); // 👈 Get the saved token
+
+        const res = await fetch(`http://localhost:4000/api/outfits`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // 👈 Send it in the header
+          },
+        });
+
         const data = await res.json();
         console.log("Fetched outfits:", data);
 

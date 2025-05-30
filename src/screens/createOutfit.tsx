@@ -3,6 +3,7 @@ import { View, Text, Button, Alert, Image, ScrollView, TouchableOpacity, Modal, 
 import axios from 'axios';
 import { BACKEND_URL } from '../config';
 import { Trash2 } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type ClothingItem = {
@@ -25,14 +26,20 @@ const CreateOutfit: React.FC = () => {
   useEffect(() => {
     const fetchClothingItems = async () => {
       try {
-        const res = await axios.get(`http://localhost:4000/api/clothes`);
+        const token = await AsyncStorage.getItem('token'); // assuming you're using AsyncStorage to store the auth token
+        const res = await axios.get(`http://localhost:4000/api/clothes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         console.log("Clothing response:", res.data);
         setItems(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Failed to fetch clothing items:', err);
         Alert.alert('Error loading clothing items');
       } finally {
-        setLoadingItems(false); // <-- make sure this runs no matter what
+        setLoadingItems(false);
       }
     };
 
@@ -42,7 +49,7 @@ const CreateOutfit: React.FC = () => {
 
   const handleGenerateOutfit = async () => {
     console.log("🟢 handleGenerateOutfit called");
-    
+
     if (!top || !bottom || !shoe) {
       Alert.alert('Please select a top, bottom, and shoe.');
       return;
@@ -51,29 +58,47 @@ const CreateOutfit: React.FC = () => {
     try {
       setLoading(true);
 
-      console.log("Saving outfit with:", {
-        top: top?._id,
-        bottom: bottom?._id,
-        shoe: shoe?._id,
-      });
+      const token = await AsyncStorage.getItem('token'); // ✅ get the token
+      if (!token) {
+        Alert.alert('User not authenticated');
+        return;
+      }
 
-      const response = await axios.post(`${BACKEND_URL}/api/outfits`, {
+      console.log("Saving outfit with:", {
         top: top._id,
         bottom: bottom._id,
         shoe: shoe._id,
       });
 
+      const response = await axios.post(
+        `http://localhost:4000/api/outfits`,
+        {
+          top: top._id,
+          bottom: bottom._id,
+          shoe: shoe._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ send the token
+          },
+        }
+      );
+
       Alert.alert('Outfit saved!');
       console.log('Saved outfit:', response.data);
 
-      // Clear the selections if desired
+      // Clear selections
       setTop(null);
       setBottom(null);
       setShoe(null);
-    } catch (err) {
-      console.error('Error saving outfit:', err);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        console.error('Axios error saving outfit:', err.response?.data || err.message);
+      } else {
+        console.error('Unexpected error saving outfit:', err);
+      }
       Alert.alert('Failed to save outfit');
-    } finally {
+    }    finally {
       setLoading(false);
     }
   };
@@ -199,13 +224,19 @@ const styles = StyleSheet.create({
   },
   canvasPreview: {
     alignItems: 'center',
+    justifyContent: 'center',
+    height: 450, // or whatever fixed height you chose
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    paddingVertical: 12,
+    overflow: 'hidden', // ✅ prevents images from overflowing
     marginVertical: 8,
   },
   canvasItem: {
     width: 150,
     height: 150,
     resizeMode: 'contain',
-    marginVertical: 2,
   },
   trash: {
     fontSize: 24,
