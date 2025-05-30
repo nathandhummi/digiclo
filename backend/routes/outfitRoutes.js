@@ -1,15 +1,15 @@
 // routes/outfits.ts or outfits.routes.ts
 import express from 'express';
 import Outfit from '../models/Outfit.js';
-import axios from 'axios';
-import Replicate from 'replicate';
-import { openai } from '../utils/openaiClient.js'; // don't forget the .js at the end
+//import Replicate from 'replicate';
 
 const router = express.Router();
 
+/*
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN, // Put this in your .env file
 });
+*/
 
 // GET /outfits - get all outfits
 router.get('/', async (req, res) => {
@@ -28,14 +28,16 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { top, bottom, shoe, prompt, imageUrl } = req.body;
+  const { top, bottom, shoe} = req.body;
 
-  if (!top || !bottom || !shoe || !prompt || !imageUrl) {
+  console.log("🛠️ Received POST /api/outfits with:", { top, bottom, shoe });
+
+  if (!top || !bottom || !shoe ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    const newOutfit = new Outfit({ top, bottom, shoe, prompt, imageUrl });
+    const newOutfit = new Outfit({ top, bottom, shoe });
     await newOutfit.save();
 
     const populatedOutfit = await Outfit.findById(newOutfit._id)
@@ -43,6 +45,7 @@ router.post('/', async (req, res) => {
         .populate('bottom')
         .populate('shoe');
 
+    console.log("✅ Outfit saved:", populatedOutfit);
     res.status(201).json(populatedOutfit);
   } catch (err) {
     console.error('Failed to save outfit:', err);
@@ -50,6 +53,7 @@ router.post('/', async (req, res) => {
   }
 });
 
+/*
 // POST /api/outfits/generate-image
 router.post('/generate-image', async (req, res) => {
   console.log('REQ BODY:', req.body); // <- add this
@@ -106,5 +110,6 @@ router.post('/generate-image', async (req, res) => {
     res.status(500).json({ message: 'Failed to generate image' });
   }
 });
+*/
 
 export default router;
