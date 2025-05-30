@@ -30,6 +30,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { top, bottom, shoe} = req.body;
 
+  console.log("🛠️ Received POST /api/outfits with:", { top, bottom, shoe });
+
   if (!top || !bottom || !shoe ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
@@ -43,6 +45,7 @@ router.post('/', async (req, res) => {
         .populate('bottom')
         .populate('shoe');
 
+    console.log("✅ Outfit saved:", populatedOutfit);
     res.status(201).json(populatedOutfit);
   } catch (err) {
     console.error('Failed to save outfit:', err);

@@ -41,6 +41,8 @@ const CreateOutfit: React.FC = () => {
 
 
   const handleGenerateOutfit = async () => {
+    console.log("🟢 handleGenerateOutfit called");
+    
     if (!top || !bottom || !shoe) {
       Alert.alert('Please select a top, bottom, and shoe.');
       return;
@@ -48,6 +50,12 @@ const CreateOutfit: React.FC = () => {
 
     try {
       setLoading(true);
+
+      console.log("Saving outfit with:", {
+        top: top?._id,
+        bottom: bottom?._id,
+        shoe: shoe?._id,
+      });
 
       const response = await axios.post(`${BACKEND_URL}/api/outfits`, {
         top: top._id,
