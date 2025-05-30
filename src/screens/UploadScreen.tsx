@@ -1,9 +1,11 @@
+// src/screens/clothes/UploadScreen.tsx
 import React, { useState } from 'react';
 import {
   SafeAreaView,
   ScrollView,
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   Image,
   StyleSheet,
@@ -12,18 +14,24 @@ import { Dropdown } from 'react-native-element-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import TagsInput from '../components/TagsInput';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types';
 import { BACKEND_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+type NavProp = NativeStackNavigationProp<RootStackParamList, 'Upload'>;
 type CategoryOption = { label: string; value: string };
 
 const CATEGORIES: CategoryOption[] = [
-  { label: 'Top',    value: 'top' },
+  { label: 'Top', value: 'top' },
   { label: 'Bottom', value: 'bottom' },
-  { label: 'Shoe',   value: 'shoe' },
+  { label: 'Shoe', value: 'shoe' },
 ];
 
-const UploadScreen: React.FC = () => {
+export default function UploadScreen() {
+  const navigation = useNavigation<NavProp>();
+  const [label, setLabel] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [category, setCategory] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
@@ -63,6 +71,10 @@ const UploadScreen: React.FC = () => {
 
   const saveClothingItem = async () => {
     if (uploading) return;
+    if (!label.trim()) {
+      alert('Please enter a name for your item.');
+      return;
+    }
     if (!category) {
       alert('Please select a category.');
       return;
@@ -70,7 +82,7 @@ const UploadScreen: React.FC = () => {
 
     setUploading(true);
     try {
-      const token = await AsyncStorage.getItem('token'); // 🔑 get token
+      const token = await AsyncStorage.getItem('token');
       if (!token) {
         alert('User not authenticated');
         return;
@@ -79,30 +91,34 @@ const UploadScreen: React.FC = () => {
       const imageUrl = await uploadImage();
       if (!imageUrl) throw new Error('Image upload failed');
 
-      await fetch(`${BACKEND_URL}/api/clothes`, {
+      const res = await fetch(`${BACKEND_URL}/api/clothes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json',
-                 Authorization: `Bearer ${token}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ category, imageUrl, tags }),
+        body: JSON.stringify({ label, category, imageUrl, tags }),
       });
 
-      alert('Upload complete!');
-      setImage(null);
-      setCategory('');
-      setTags([]);
-    } catch (err) {
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Save failed');
+      }
+
+      // Navigate back so the list screen refetches
+      navigation.goBack();
+    } catch (err: any) {
       console.error(err);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${err.message}`);
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Text style={styles.title}>Upload</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Upload New Item</Text>
 
         <TouchableOpacity
           style={image ? styles.imageBoxLarge : styles.uploadButton}
@@ -114,6 +130,14 @@ const UploadScreen: React.FC = () => {
             <Text style={styles.uploadButtonText}>+</Text>
           )}
         </TouchableOpacity>
+
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="e.g. Blue Jeans"
+          value={label}
+          onChangeText={setLabel}
+        />
 
         <Text style={styles.label}>Category</Text>
         <Dropdown
@@ -134,7 +158,7 @@ const UploadScreen: React.FC = () => {
           disabled={uploading}
           style={[
             styles.uploadButtonFullWidth,
-            uploading && { backgroundColor: '#ccc' },
+            uploading && styles.disabledButton,
           ]}
         >
           <Text style={styles.buttonText}>
@@ -144,9 +168,11 @@ const UploadScreen: React.FC = () => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
+  content: { padding: 20 },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -184,6 +210,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 8,
   },
+  textInput: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
   dropdown: {
     height: 44,
     borderWidth: 1,
@@ -201,11 +236,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
 });
-
-export default UploadScreen;
