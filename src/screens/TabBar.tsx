@@ -1,83 +1,47 @@
+// src/screens/TabBar.tsx
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types';
 import UploadModal from '../components/UploadModal';
 
-export default function TabBar({ state, navigation }: BottomTabBarProps) {
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
+
+export default function TabBar() {
+  const navigation = useNavigation<NavProp>();
+  const route = useRoute();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleUploadPress = () => {
-    setModalVisible(true);
-  };
-
-  const handleUploadClothes = () => {
-    setModalVisible(false);
-    navigation.navigate('Upload');
-  };
-
-  const handleCreateOutfit = () => {
-    setModalVisible(false);
-    navigation.navigate('CreateOutfit');
-  };
+  const tabs: { name: keyof Pick<RootStackParamList, 'Home'|'Upload'|'Outfits'>; icons: [string,string] }[] = [
+    { name: 'Home',   icons: ['home-outline','home'] },
+    { name: 'Upload', icons: ['add-circle-outline','add-circle'] },
+    { name: 'Outfits',icons: ['shirt-outline','shirt'] },
+  ];
 
   return (
     <>
       <View style={styles.container}>
-        {state.routes
-          .filter((route) => route.name !== 'CreateOutfit')
-          .map((route, index) => {
-          const isFocused = state.index === index;
-          const label = route.name;
-
-          const onPress = () => {
-            if (label === 'Upload') {
-              handleUploadPress();
-              return;
-            }
-
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          let iconName: keyof typeof Ionicons.glyphMap;
-          switch (label) {
-            case 'Home':
-              iconName = isFocused ? 'home' : 'home-outline';
-              break;
-            case 'Upload':
-              iconName = 'add-circle'; // Use solid icon always
-              break;
-            case 'Outfits':
-              iconName = isFocused ? 'shirt' : 'shirt-outline';
-              break;
-            default:
-              iconName = 'ellipse';
-          }
-
-          const isCenter = label === 'Upload';
-
+        {tabs.map(({ name, icons }) => {
+          const focused = route.name === name;
+          const icon = focused ? icons[1] : icons[0];
           return (
             <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              style={[styles.tab, isCenter && styles.centerTab]}
+              key={name}
+              style={styles.tab}
+              onPress={() => {
+                if (name === 'Upload') {
+                  setModalVisible(true);
+                } else {
+                  navigation.navigate(name);
+                }
+              }}
             >
-              <Ionicons
-                name={iconName}
-                size={isCenter ? 48 : 24}
-                color={isCenter ? '#000' : isFocused ? '#000' : 'gray'}
-              />
-              {!isCenter && (
-                <Text style={[styles.label, isFocused && styles.focused]}>
-                  {label.toUpperCase()}
+              <Ionicons name={icon as any} size={24} color={focused ? '#000' : 'gray'} />
+              {name !== 'Upload' && (
+                <Text style={[styles.label, focused && styles.focused]}>
+                  {name.toUpperCase()}
                 </Text>
               )}
             </TouchableOpacity>
@@ -88,8 +52,14 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
       <UploadModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onUploadClothes={handleUploadClothes}
-        onCreateOutfit={handleCreateOutfit}
+        onUploadClothes={() => {
+          setModalVisible(false);
+          navigation.navigate('Upload');
+        }}
+        onCreateOutfit={() => {
+          setModalVisible(false);
+          navigation.navigate('CreateOutfit');
+        }}
       />
     </>
   );
@@ -99,21 +69,13 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: 80,
-    backgroundColor: '#fff',
     borderTopWidth: 0.5,
     borderColor: '#ccc',
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'space-around',
   },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  centerTab: {
-    marginTop: -20,
-  },
+  tab: { alignItems: 'center' },
   label: {
     fontSize: 12,
     color: 'gray',
