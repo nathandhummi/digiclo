@@ -16,14 +16,6 @@ const outfitSchema = new mongoose.Schema({
     ref: 'ClothingItem',
     required: true,
   },
-  prompt: {
-    type: String, // the prompt you used with DALL·E or another model
-    required: true,
-  },
-  imageUrl: {
-    type: String, // Cloudinary, DALL·E URL, etc.
-    required: true,
-  },
 }, { timestamps: true });
 
 const Outfit = mongoose.model('Outfit', outfitSchema);
