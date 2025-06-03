@@ -61,6 +61,25 @@ router.post('/', authenticateUser, async (req, res) => {
   }
 });
 
+// DELETE /api/outfits/:id - delete an outfit by ID (must belong to logged-in user)
+router.delete('/:id', authenticateUser, async (req, res) => {
+  try {
+    const deleted = await Outfit.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user._id, // ✅ make sure this matches how you save outfits
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Outfit not found or not authorized' });
+    }
+
+    res.json({ message: 'Outfit deleted' });
+  } catch (err) {
+    console.error('Failed to delete outfit:', err);
+    res.status(500).json({ error: 'Server error deleting outfit' });
+  }
+});
+
 /*
 // POST /api/outfits/generate-image
 router.post('/generate-image', async (req, res) => {
