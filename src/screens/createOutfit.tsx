@@ -132,13 +132,15 @@ const CreateOutfit: React.FC = () => {
             {bottom && <Image source={{ uri: bottom.imageUrl }} style={styles.canvasItem} />}
             {shoe && <Image source={{ uri: shoe.imageUrl }} style={styles.canvasItem} />}
             {(top || bottom || shoe) && (
-              <TouchableOpacity onPress={() => {
-                setTop(null);
-                setBottom(null);
-                setShoe(null);
-              }}>
+              <View style={{ paddingTop: 10 }}>
+                <TouchableOpacity onPress={() => {
+                  setTop(null);
+                  setBottom(null);
+                  setShoe(null);
+                }}>
                 <Trash2 size={32} color="#444" />
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
@@ -224,19 +226,19 @@ const styles = StyleSheet.create({
   },
   canvasPreview: {
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 450, // or whatever fixed height you chose
+    justifyContent: 'flex-start', // ✅ start from top
+    height: 600, // 🔼 increase this from 450 to something bigger
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#eee',
-    paddingVertical: 12,
-    overflow: 'hidden', // ✅ prevents images from overflowing
-    marginVertical: 8,
+    paddingTop: 20, // ✅ adds space from the top
+    paddingBottom: 40, // ✅ allows space for the trash icon
   },
   canvasItem: {
     width: 150,
     height: 150,
     resizeMode: 'contain',
+    marginVertical: 6, // ✅ consistent spacing between top/bottom/shoe
   },
   trash: {
     fontSize: 24,
