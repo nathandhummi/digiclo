@@ -158,6 +158,11 @@ export default function ItemDetail({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={28} color="#000" />
+        </TouchableOpacity>
+
         <View style={styles.card}>
           <Image source={{ uri: imageUrl }} style={styles.image} />
 
@@ -204,6 +209,13 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: '#fff' },
   content: { alignItems: 'center', padding: 16 },
+
+  backBtn: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 10,
+  },
 
   card: {
     width: IMAGE_SIZE,
