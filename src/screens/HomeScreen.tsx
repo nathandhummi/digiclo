@@ -121,8 +121,16 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {renderSection('Outfits', outfits, 'Outfits')}
-      <View style={styles.divider} />
+      <View style={styles.topBar}>
+        <Image
+          source={require('../../croplogo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          <Ionicons name="person-circle-outline" size={32} color="black" />
+        </TouchableOpacity>
+      </View>
 
       {renderSection('Tops', tops, 'Tops')}
       <View style={styles.divider} />
@@ -166,5 +174,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     marginVertical: 12,
     marginHorizontal: 16,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 6,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  logo: {
+    width: 180,
+    height: 40,
+    margin: 0,
+    padding: 0,
   },
 });

@@ -14,6 +14,7 @@ import Tops               from './screens/clothes/Tops';
 import Bottoms            from './screens/clothes/Bottoms';
 import Shoes              from './screens/clothes/Shoes';
 import ItemDetail         from './screens/clothes/ItemDetail';
+import ProfileScreen      from './screens/ProfileScreen';
 
 import LoginScreen  from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -30,6 +31,7 @@ export type RootStackParamList = {
   Item:         { id: string; imageUrl: string; isFavorite: boolean; tags: string[] };
   Bottoms:      undefined;
   Shoes:        undefined;
+  Profile:      undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -98,6 +100,7 @@ export default function App() {
             <Stack.Screen name="Item"         component={withTabBar(ItemDetail)} />
             <Stack.Screen name="Bottoms"      component={withTabBar(Bottoms)} />
             <Stack.Screen name="Shoes"        component={withTabBar(Shoes)} />
+            <Stack.Screen name="Profile" component={withTabBar(ProfileScreen)} />
           </>
         )}
       </Stack.Navigator>
