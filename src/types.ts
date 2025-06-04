@@ -2,6 +2,7 @@ export type RootStackParamList = {
   Login:   { setIsLoggedIn: (loggedIn: boolean) => void };
   Signup:  { setIsLoggedIn: (loggedIn: boolean) => void };
   Home:    undefined;
+  Profile:  undefined;
   Upload:  undefined;
   Tops:    undefined;
   Bottoms: undefined;

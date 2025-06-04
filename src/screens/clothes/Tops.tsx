@@ -219,9 +219,9 @@ const styles = StyleSheet.create({
   // — Compact search dropdown, aligned under “SEARCH” —
   searchDropdown: {
     position: 'absolute',
-    top: 48,       // just below header
-    right: 16,     // align under the SEARCH text/button
-    width: 260,    // fixed compact width (adjust as desired)
+    top: 48,       
+    right: 16,     
+    width: 260,    
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#000',
