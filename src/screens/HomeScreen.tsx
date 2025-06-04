@@ -127,7 +127,7 @@ export default function HomeScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileButton}>
           <Ionicons name="person-circle-outline" size={32} color="black" />
         </TouchableOpacity>
       </View>
@@ -179,7 +179,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    // Remove left padding so logo is flush to edge:
+    paddingLeft: 0,
+    // Keep a small right padding so profile icon isn't flush against edge:
+    paddingRight: 12,
     paddingTop: 10,
     paddingBottom: 6,
     backgroundColor: '#fff',
@@ -194,7 +197,11 @@ const styles = StyleSheet.create({
   logo: {
     width: 180,
     height: 40,
-    margin: 0,
-    padding: 0,
+    // Make sure no extra margin/padding on the left:
+    marginLeft: -18,
+  },
+  profileButton: {
+    // Optionally add a small margin to pull it slightly away from the right edge:
+    marginRight: 4,
   },
 });
