@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { BACKEND_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -52,6 +53,37 @@ export default function OutfitsScreen() {
     fetchOutfits();
   }, []);
 
+  const handleDeleteOutfit = async (id: string) => {
+    const confirm = window.confirm('Delete this outfit?');
+    if (!confirm) return;
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Not authenticated');
+
+      const res = await fetch(`${BACKEND_URL}/api/outfits/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        let msg = 'Failed to delete outfit';
+        try {
+          const body = await res.json();
+          msg = body.error || msg;
+        } catch (e) {}
+        throw new Error(msg);
+      }
+
+      // Remove outfit from UI
+      setOutfits((prev) => prev.filter((o) => o._id !== id));
+    } catch (err: any) {
+      window.alert(err.message || 'Could not delete outfit');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -69,11 +101,20 @@ export default function OutfitsScreen() {
           .filter(o => o.top && o.bottom && o.shoe)
           .map((outfit) => (
             <View key={outfit._id} style={styles.outfitBlock}>
+              {/* Trash Icon */}
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => handleDeleteOutfit(outfit._id)}
+              >
+                <Ionicons name="trash-outline" size={24} color="#666" />
+              </TouchableOpacity>
+
+              {/* Images */}
               <Image source={{ uri: outfit.top.imageUrl }} style={styles.outfitImage} />
               <Image source={{ uri: outfit.bottom.imageUrl }} style={styles.outfitImage} />
               <Image source={{ uri: outfit.shoe.imageUrl }} style={styles.outfitImage} />
             </View>
-          ))}
+        ))}
       </View>
     </ScrollView>
   );
@@ -134,11 +175,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2, // for Android
+    position: 'relative',
   },
   outfitImage: {
     width: 140,
     height: 140,
     resizeMode: 'contain',
     marginVertical: 4,
+  },
+  deleteBtn: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 20,
+    padding: 4,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 2,
   },
 });

@@ -134,6 +134,51 @@ export default function ItemDetail({ route, navigation }: Props) {
     [id]
   );
 
+  const handleDeleteItem = () => {
+    console.log('hello');
+
+    const confirm = window.confirm('Are you sure you want to delete this item?');
+    if (confirm) {
+      confirmDeleteItem();
+    }
+  };
+
+  const confirmDeleteItem = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Not authenticated');
+
+      const res = await fetch(`${BACKEND_URL}/api/clothes/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        let errorMsg = 'Failed to delete item';
+        try {
+          const contentType = res.headers.get('Content-Type');
+          if (contentType && contentType.includes('application/json')) {
+            const errBody = await res.json();
+            errorMsg = errBody.error || errorMsg;
+          } else {
+            const text = await res.text(); // Grab HTML or plain text
+            console.error('Non-JSON error:', text);
+          }
+        } catch (e) {
+          console.error('Error parsing response', e);
+        }
+        throw new Error(errorMsg);
+      }
+
+      window.alert('Item deleted!');
+      navigation.goBack();
+    } catch (err: any) {
+      window.alert(err.message || 'Could not delete item.');
+    }
+  };
+
   /**
    * Any time `tags` changes (e.g. you tap the “×” on a chip), push to the server.
    */
@@ -164,6 +209,12 @@ export default function ItemDetail({ route, navigation }: Props) {
         </TouchableOpacity>
 
         <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={() => handleDeleteItem()}
+          >
+            <Ionicons name="trash-outline" size={24} color="#666" />
+          </TouchableOpacity>
           <Image source={{ uri: imageUrl }} style={styles.image} />
 
           <TouchableOpacity
@@ -261,5 +312,19 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 12,
     color: '#555',
+  },
+  deleteBtn: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)', // same as favoriteBtn
+    borderRadius: 20,
+    padding: 4,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 2, // for Android
   },
 });

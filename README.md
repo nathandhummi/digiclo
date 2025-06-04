@@ -12,6 +12,9 @@ Open up another terminal and cd to the backend directory. Then run
    1. npm install
    2. npm run dev
 
+Open up another terminal and cd to the backend. Run
+   1. uvicorn tagger_api:app --host 0.0.0.0 --port 8000
+
 Open up another terminal and in the home directory, run
    1. npm run tunnel
 

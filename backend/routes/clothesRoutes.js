@@ -125,4 +125,16 @@ router.patch('/:id', authenticateUser, async (req, res) => {
   }
 });
 
+// DELETE /api/clothes/:id
+router.delete('/:id', authenticateUser, async (req, res) => {
+  try {
+    const item = await ClothingItem.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    res.json({ message: 'Item deleted' });
+  } catch (err) {
+    console.error('DELETE failed', err);
+    res.status(500).json({ error: 'Server error deleting item' });
+  }
+});
+
 export default router;
