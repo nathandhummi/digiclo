@@ -55,11 +55,11 @@ export default function App() {
     const checkAuth = async () => {
       try {
         // Commented out for testing
-        // const token = await AsyncStorage.getItem('token');
-        // const user = await AsyncStorage.getItem('user');
-        // if (token && user) {
-        //   setIsLoggedIn(true);
-        // }
+        const token = await AsyncStorage.getItem('token');
+        const user = await AsyncStorage.getItem('user');
+        if (token && user) {
+          setIsLoggedIn(true);
+        }
         setIsLoading(false);
       } catch (error) {
         console.error('Error checking authentication:', error);
