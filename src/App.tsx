@@ -31,7 +31,7 @@ export type RootStackParamList = {
   Item:         { id: string; imageUrl: string; isFavorite: boolean; tags: string[] };
   Bottoms:      undefined;
   Shoes:        undefined;
-  Profile:      undefined;
+  Profile:      { setIsLoggedIn: (b: boolean) => void };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -100,7 +100,11 @@ export default function App() {
             <Stack.Screen name="Item"         component={withTabBar(ItemDetail)} />
             <Stack.Screen name="Bottoms"      component={withTabBar(Bottoms)} />
             <Stack.Screen name="Shoes"        component={withTabBar(Shoes)} />
-            <Stack.Screen name="Profile" component={withTabBar(ProfileScreen)} />
+            <Stack.Screen 
+              name="Profile" 
+              component={withTabBar(ProfileScreen)}
+              initialParams={{ setIsLoggedIn }}
+            />
           </>
         )}
       </Stack.Navigator>
