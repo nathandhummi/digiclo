@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
   photoUrl: {
     type: String,
   },
+  bio: {
+    type: String,
+    default: '',
+    trim: true,
+    maxLength: 500
+  },
   password: {
     type: String,
     required: true

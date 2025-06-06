@@ -24,8 +24,30 @@ type ClothesRoute = 'Outfits' | 'Tops' | 'Bottoms' | 'Shoes';
 export default function HomeScreen() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   const navigation = useNavigation<NavProp>();
+
+  const fetchUser = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+    }, [])
+  );
 
   const fetchClothing = async () => {
     try {
@@ -128,7 +150,14 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
         <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileButton}>
-          <Ionicons name="person-circle-outline" size={32} color="black" />
+          {user?.photoUrl ? (
+            <Image
+              source={{ uri: user.photoUrl }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <Ionicons name="person-circle-outline" size={32} color="black" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -203,5 +232,10 @@ const styles = StyleSheet.create({
   profileButton: {
     // Optionally add a small margin to pull it slightly away from the right edge:
     marginRight: 4,
+  },
+  profileImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
 });

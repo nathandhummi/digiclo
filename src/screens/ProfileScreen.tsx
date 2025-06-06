@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, Platform } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, Platform, TextInput, Pressable, Modal, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,7 @@ interface User {
   email: string;
   username: string;
   photoUrl?: string;
+  bio?: string;
 }
 
 export default function ProfileScreen() {
@@ -23,6 +24,11 @@ export default function ProfileScreen() {
   const route = useRoute();
   const [user, setUser] = useState<User | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newBio, setNewBio] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -32,10 +38,6 @@ export default function ProfileScreen() {
           const parsedUser = JSON.parse(userData);
           console.log('🔍 Loaded user data:', parsedUser);
           console.log('🖼️ photoUrl:', parsedUser.photoUrl);
-          const fullUrl = parsedUser.photoUrl?.startsWith('http')
-            ? parsedUser.photoUrl
-            : `${BACKEND_URL}${parsedUser.photoUrl}`;
-          console.log('🌐 Final image URL:', fullUrl);
           setUser(parsedUser);
         }
       } catch (error) {
@@ -133,54 +135,254 @@ export default function ProfileScreen() {
     });
   };
 
+  const handleUsernameEdit = async () => {
+    if (!newUsername.trim()) {
+      Alert.alert('Error', 'Username cannot be empty');
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Missing auth token');
+
+      const response = await axios.put(
+        `${BACKEND_URL}/api/auth/update-username`,
+        { username: newUsername },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (user) {
+        const updatedUser: User = {
+          ...user,
+          username: newUsername,
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+
+      setIsEditingUsername(false);
+      Alert.alert('Success', 'Username updated successfully!');
+    } catch (error) {
+      console.error('Error updating username:', error);
+      Alert.alert('Error', 'Failed to update username');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleBioEdit = async () => {
+    try {
+      setIsUpdating(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Missing auth token');
+
+      const response = await axios.put(
+        `${BACKEND_URL}/api/auth/update-bio`,
+        { bio: newBio },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (user) {
+        const updatedUser: User = {
+          ...user,
+          bio: newBio,
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+
+      setIsEditingBio(false);
+      Alert.alert('Success', 'Bio updated successfully!');
+    } catch (error) {
+      console.error('Error updating bio:', error);
+      Alert.alert('Error', 'Failed to update bio');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const imageUri = user?.photoUrl
-    ? user.photoUrl.startsWith('http')
-      ? `${user.photoUrl}?t=${Date.now()}`
-      : `${BACKEND_URL}${user.photoUrl}?t=${Date.now()}`
+    ? `${user.photoUrl}?t=${Date.now()}`
     : null;
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileSection}>
-        <TouchableOpacity onPress={pickImage} disabled={isUpdating}>
-          {imageUri ? (
-            <View style={styles.photoContainer}>
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.profilePhoto}
-                onError={(error) => {
-                  console.error('❌ Image load error:', error.nativeEvent);
-                  console.log('URL that failed:', imageUri);
-                }}
-                onLoad={() => console.log('✅ Image loaded successfully')}
-              />
-              <View style={styles.editOverlay}>
-                <Ionicons name="camera" size={24} color="white" />
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Ionicons name="arrow-back" size={24} color="#172251" />
+      </TouchableOpacity>
+
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.profileSection}>
+          <TouchableOpacity onPress={pickImage} disabled={isUpdating}>
+            {imageUri ? (
+              <View style={styles.photoContainer}>
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.profilePhoto}
+                  onError={(error) => {
+                    console.error('❌ Image load error:', error.nativeEvent);
+                    console.log('URL that failed:', imageUri);
+                  }}
+                  onLoad={() => console.log('✅ Image loaded successfully')}
+                />
+                <View style={styles.editOverlay}>
+                  <Ionicons name="camera" size={24} color="white" />
+                </View>
               </View>
-            </View>
-          ) : (
-            <View style={styles.defaultProfilePhoto}>
-              <Ionicons name="person" size={60} color="#666" />
-              <View style={styles.editOverlay}>
-                <Ionicons name="camera" size={24} color="white" />
+            ) : (
+              <View style={styles.defaultProfilePhoto}>
+                <Ionicons name="person" size={60} color="#666" />
+                <View style={styles.editOverlay}>
+                  <Ionicons name="camera" size={24} color="white" />
+                </View>
               </View>
-            </View>
-          )}
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.usernameContainer}
+            onPress={() => {
+              setIsEditingUsername(true);
+              setNewUsername(user?.username || '');
+            }}
+          >
+            <Text style={styles.username}>{user?.username || 'User'}</Text>
+            <Ionicons name="pencil" size={16} color="#666" style={styles.editIcon} />
+          </TouchableOpacity>
+          <Text style={styles.email}>{user?.email || ''}</Text>
+
+          <TouchableOpacity 
+            style={styles.bioContainer}
+            onPress={() => {
+              setIsEditingBio(true);
+              setNewBio(user?.bio || '');
+            }}
+          >
+            <Text style={styles.bioText}>
+              {user?.bio || 'Add a bio...'}
+            </Text>
+            <Ionicons name="pencil" size={14} color="#666" style={styles.editIcon} />
+          </TouchableOpacity>
+
+          <Text style={styles.comingSoon}>Coming Soon</Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.logoutButtonContainer}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
-        <Text style={styles.username}>{user?.username || 'User'}</Text>
-        <Text style={styles.email}>{user?.email || ''}</Text>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
+      <Modal
+        visible={isEditingUsername}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsEditingUsername(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Username</Text>
+            <TextInput
+              style={styles.usernameInput}
+              value={newUsername}
+              onChangeText={setNewUsername}
+              placeholder="Enter new username"
+              autoFocus
+              maxLength={30}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setIsEditingUsername(false);
+                  setNewUsername('');
+                }}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleUsernameEdit}
+                disabled={isUpdating}
+              >
+                <Text style={styles.modalButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isEditingBio}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsEditingBio(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Bio</Text>
+            <TextInput
+              style={styles.bioInput}
+              value={newBio}
+              onChangeText={setNewBio}
+              placeholder="Tell us about yourself..."
+              autoFocus
+              multiline
+              maxLength={500}
+              numberOfLines={4}
+            />
+            <Text style={styles.charCount}>{newBio.length}/500</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setIsEditingBio(false);
+                  setNewBio('');
+                }}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleBioEdit}
+                disabled={isUpdating}
+              >
+                <Text style={styles.modalButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  profileSection: { alignItems: 'center', marginTop: 40, marginBottom: 40 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+    padding: 20,
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 40,
+  },
   photoContainer: { position: 'relative', marginBottom: 16 },
   profilePhoto: { width: 120, height: 120, borderRadius: 60 },
   defaultProfilePhoto: {
@@ -196,13 +398,139 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: '#fff',
   },
-  username: { fontSize: 24, fontWeight: '600', color: '#172251', marginBottom: 8 },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  username: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#172251',
+    marginRight: 8,
+  },
+  editIcon: {
+    marginLeft: 2,
+  },
   email: { fontSize: 16, color: '#666', marginBottom: 8 },
+  logoutButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: '#fff',
+    // borderTopWidth: ,
+    borderTopColor: '#eee',
+    alignItems: 'center',
+  },
   logoutButton: {
     backgroundColor: '#ff4444',
-    paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 8, alignSelf: 'center',
-    marginTop: 'auto', marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 100,
   },
-  logoutButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#172251',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  usernameInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  saveButton: {
+    backgroundColor: '#172251',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  bioContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 16,
+    paddingHorizontal: 20,
+    width: '10%',
+    alignSelf: 'center',
+  },
+  bioText: {
+    fontSize: 16,
+    color: '#666',
+    flex: 1,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    // marginRight: 4,
+  },
+  bioInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 8,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  charCount: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+    marginBottom: 16,
+  },
+  comingSoon: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 150,
+    marginBottom: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
+    padding: 8,
+  },
 });

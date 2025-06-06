@@ -4,6 +4,9 @@ import multer from 'multer';
 import path from 'path';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
+import cloudinary from '../cloudinary/config.js';
+import bcrypt from 'bcryptjs';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -22,74 +25,59 @@ const upload = multer({
   }
 });
 
-// Helper: Upload file to GridFS
-const uploadToGridFS = async (file, bucket) => {
+// Helper: Upload file to Cloudinary
+const uploadToCloudinary = async (file) => {
   try {
-    console.log('Starting GridFS upload...');
-    const filename = `${Date.now()}-${file.originalname}`;
-
-    const uploadStream = bucket.openUploadStream(filename, {
-      contentType: file.mimetype,
-      metadata: {
-        uploadedBy: 'user',
-        uploadDate: new Date()
-      }
+    console.log('Starting Cloudinary upload...');
+    
+    // Convert buffer to base64
+    const b64 = Buffer.from(file.buffer).toString('base64');
+    const dataURI = `data:${file.mimetype};base64,${b64}`;
+    
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: 'profile_photos',
+      width: 300,
+      height: 300,
+      crop: 'fill'
     });
-
-    return new Promise((resolve, reject) => {
-      uploadStream.on('error', (error) => {
-        console.error('Error uploading file to GridFS:', error);
-        reject(error);
-      });
-
-      uploadStream.on('finish', () => {
-        console.log('File uploaded successfully with ID:', uploadStream.id);
-        resolve(uploadStream.id);
-      });
-
-      uploadStream.write(file.buffer);
-      uploadStream.end();
-    });
+    
+    console.log('File uploaded successfully to Cloudinary:', result.secure_url);
+    return result.secure_url;
   } catch (error) {
-    console.error('Error in uploadToGridFS:', error);
+    console.error('Error in uploadToCloudinary:', error);
     throw error;
   }
 };
 
-const getFileUrl = (fileId) => `/api/auth/photo/${fileId}`;
-
 // Signup
-router.post('/signup', upload.single('photo'), async (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
-    console.log('Signup request received:', { body: req.body, file: !!req.file });
+    console.log('Signup request received:', {
+      body: req.body
+    });
+
     const { email, password, username } = req.body;
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
 
-    if (!email || !password || !username) {
-      return res.status(400).json({ message: 'Email, password and username are required' });
-    }
-
-    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    let photoUrl;
-    if (req.file) {
-      const fileId = await uploadToGridFS(req.file, req.gridFSBucket);
-      photoUrl = getFileUrl(fileId);
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ email, password, username, photoUrl });
+    const user = new User({
+      email,
+      password: hashedPassword,
+      username,
+      photoUrl: '' // Default empty photo URL
+    });
 
     await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     res.status(201).json({
+      message: 'User created successfully',
       token,
       user: {
         id: user._id,
@@ -100,9 +88,10 @@ router.post('/signup', upload.single('photo'), async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ message: 'Error creating user', error: error.message });
+    res.status(500).json({ message: 'Error creating user' });
   }
 });
+
 
 // Login
 router.post('/login', async (req, res) => {
@@ -151,8 +140,18 @@ router.put('/update-photo', upload.single('photo'), async (req, res) => {
     const user = await User.findById(decoded.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const fileId = await uploadToGridFS(req.file, req.gridFSBucket);
-    user.photoUrl = getFileUrl(fileId);
+    // If user has an existing photo, delete it from Cloudinary
+    if (user.photoUrl) {
+      try {
+        const publicId = user.photoUrl.split('/').slice(-1)[0].split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      } catch (error) {
+        console.error('Error deleting old photo:', error);
+      }
+    }
+
+    const photoUrl = await uploadToCloudinary(req.file);
+    user.photoUrl = photoUrl;
     await user.save();
 
     res.json({ message: 'Profile photo updated successfully', photoUrl: user.photoUrl });
@@ -162,43 +161,59 @@ router.put('/update-photo', upload.single('photo'), async (req, res) => {
   }
 });
 
-// Serve profile photo
-router.get('/photo/:fileId', async (req, res) => {
+// Update username
+router.put('/update-username', async (req, res) => {
   try {
-    console.log('Photo request received for fileId:', req.params.fileId);
-    const fileId = new mongoose.Types.ObjectId(req.params.fileId);
-    
-    // Check if file exists
-    const files = await req.gridFSBucket.find({ _id: fileId }).toArray();
-    if (files.length === 0) {
-      console.log('File not found in GridFS');
-      return res.status(404).json({ message: 'File not found' });
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
     }
-    
-    console.log('File found in GridFS:', files[0]);
-    
-    const downloadStream = req.gridFSBucket.openDownloadStream(fileId);
-    
-    // Set appropriate headers
-    res.set({
-      'Content-Type': files[0].contentType,
-      'Content-Length': files[0].length,
-      'Cache-Control': 'public, max-age=31536000'
-    });
 
-    downloadStream.on('error', (err) => {
-      console.error('Stream error:', err);
-      res.status(404).json({ message: 'File not found' });
-    });
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token provided' });
 
-    downloadStream.on('end', () => {
-      console.log('File stream ended successfully');
-    });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    downloadStream.pipe(res);
+    // Check if username is already taken
+    const existingUser = await User.findOne({ username });
+    if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+      return res.status(400).json({ message: 'Username is already taken' });
+    }
+
+    user.username = username;
+    await user.save();
+
+    res.json({ message: 'Username updated successfully', username: user.username });
   } catch (error) {
-    console.error('Error retrieving photo:', error);
-    res.status(500).json({ message: 'Error retrieving photo', error: error.message });
+    console.error('Error updating username:', error);
+    res.status(500).json({ message: 'Error updating username', error: error.message });
+  }
+});
+
+// Update bio
+router.put('/update-bio', async (req, res) => {
+  try {
+    const { bio } = req.body;
+    if (bio && bio.length > 500) {
+      return res.status(400).json({ message: 'Bio cannot exceed 500 characters' });
+    }
+
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.bio = bio || '';
+    await user.save();
+
+    res.json({ message: 'Bio updated successfully', bio: user.bio });
+  } catch (error) {
+    console.error('Error updating bio:', error);
+    res.status(500).json({ message: 'Error updating bio', error: error.message });
   }
 });
 
